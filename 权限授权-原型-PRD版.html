@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>权限授权 - XXGS合同管理系统</title>
+  <style>
+    :root {
+      --el-color-primary: #409EFF;
+      --el-color-success: #67C23A;
+      --el-color-warning: #E6A23C;
+      --el-color-danger: #F56C6C;
+      --el-text-color-primary: #303133;
+      --el-text-color-regular: #606266;
+      --el-text-color-secondary: #909399;
+      --el-border-color: #DCDFE6;
+      --el-border-color-lighter: #EBEEF5;
+      --el-bg-color-page: #F5F7F9;
+      --el-fill-color-lighter: #FAFAFA;
+      --left-menu-bg-color: #1E4DB3;
+      --left-menu-text-color: rgba(255,255,255,0.75);
+      --left-menu-text-active-color: #FFFFFF;
+      --left-menu-bg-active-color: #3B82F6;
+      --left-menu-sub-bg-color: rgba(0,0,0,0.1);
+    }
+    body { font-family: "Noto Sans SC", sans-serif; background: var(--el-bg-color-page); margin: 0; }
+    .xxgs-sider { background: var(--left-menu-bg-color); width: 200px; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; }
+    .xxgs-sider .logo { height: 50px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .xxgs-sider .logo-text { color: #fff; font-weight: 700; font-size: 16px; }
+    .xxgs-sider .logo-sub { color: rgba(255,255,255,0.8); font-size: 12px; margin-left: 6px; }
+    .xxgs-sider nav { padding: 8px 0; }
+    .xxgs-sider .menu-item { color: var(--left-menu-text-color); height: 48px; line-height: 48px; padding: 0 20px; font-size: 14px; display: flex; align-items: center; transition: all 0.3s; cursor: pointer; text-decoration: none; }
+    .xxgs-sider .menu-item:hover { background: rgba(255,255,255,0.05); }
+    .xxgs-sider .menu-item.active { background: var(--left-menu-bg-active-color); color: var(--left-menu-text-active-color); }
+    .xxgs-sider .menu-item i { width: 24px; margin-right: 8px; font-style: normal; }
+    .xxgs-sider .submenu { background: var(--left-menu-sub-bg-color); }
+    .xxgs-sider .submenu-item { color: var(--left-menu-text-color); height: 44px; line-height: 44px; padding: 0 20px 0 52px; font-size: 13px; display: flex; align-items: center; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+    .xxgs-sider .submenu-item:hover { background: rgba(255,255,255,0.05); }
+    .xxgs-sider .submenu-item.active { background: var(--left-menu-bg-active-color); color: var(--left-menu-text-active-color); }
+    .xxgs-sider .submenu-item i { width: 24px; margin-right: 8px; font-style: normal; }
+    .xxgs-header { height: 50px; background: #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: fixed; top: 0; left: 200px; right: 0; z-index: 99; }
+    .xxgs-tags-view { height: 35px; background: #FFFFFF; border-bottom: 1px solid var(--el-border-color); display: flex; align-items: center; padding: 0 16px; gap: 8px; position: fixed; top: 50px; left: 200px; right: 0; z-index: 98; }
+    .tag-item { padding: 4px 12px; font-size: 12px; border: 1px solid var(--el-border-color); border-radius: 2px; color: var(--el-text-color-regular); cursor: pointer; white-space: nowrap; }
+    .tag-item.active { background: var(--el-color-primary); color: #FFFFFF; border-color: var(--el-color-primary); }
+    .content { margin-left: 200px; padding: 85px 24px 24px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--el-text-color-primary); }
+    .btn { height: 32px; padding: 0 20px; border-radius: 4px; font-size: 14px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-primary { background: var(--el-color-primary); color: #FFFFFF; }
+    .btn-primary:hover { background: #66B1FF; }
+    .btn-default { background: #FFFFFF; border: 1px solid var(--el-border-color); color: var(--el-text-color-regular); }
+    .btn-default:hover { border-color: var(--el-color-primary); color: var(--el-color-primary); }
+    .filter-card { background: #FFFFFF; padding: 20px; border-radius: 4px; margin-bottom: 16px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    .filter-item { display: flex; align-items: center; gap: 8px; }
+    .filter-item label { width: 80px; color: var(--el-text-color-regular); font-size: 14px; }
+    .input-field, select { height: 32px; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 0 12px; font-size: 14px; }
+    .input-field:focus, select:focus { outline: none; border-color: var(--el-color-primary); }
+    /* 表格 */
+    .table-wrapper { background: #FFFFFF; border-radius: 4px; overflow: auto; }
+    .xxgs-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .xxgs-table th { background: var(--el-fill-color-lighter); padding: 12px 16px; text-align: left; font-weight: 500; color: var(--el-text-color-primary); border-bottom: 1px solid var(--el-border-color-lighter); font-size: 14px; white-space: nowrap; }
+    .xxgs-table td { padding: 12px 16px; border-bottom: 1px solid var(--el-border-color-lighter); font-size: 14px; color: var(--el-text-color-regular); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .xxgs-table tr:hover td { background: #ECF5FF; }
+    /* 操作列固定右侧 */
+    .xxgs-table th:last-child { position: sticky; right: 0; background: var(--el-fill-color-lighter); z-index: 10; }
+    .xxgs-table td:last-child { position: sticky; right: 0; background: #fff; z-index: 9; }
+    .xxgs-table .col-seq { width: 50px; text-align: center; }
+    .xxgs-table .col-user { width: 130px; }
+    .xxgs-table .col-post { width: 100px; }
+    .xxgs-table .col-dept { width: 120px; }
+    .xxgs-table .col-roles { width: 200px; }
+    .xxgs-table .col-method { width: 90px; }
+    .xxgs-table .col-grantor { width: 130px; }
+    .xxgs-table .col-date { width: 110px; }
+    .xxgs-table .col-validity { width: 180px; }
+    .xxgs-table .col-action { width: 130px; white-space: nowrap; }
+    /* 角色标签 - 表格内显示 */
+    .role-list { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    .role-tag-list { display: inline-flex; align-items: center; padding: 2px 6px; background: #ECF5FF; color: var(--el-color-primary); border-radius: 4px; font-size: 12px; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .role-tag-list.package { background: #F0F9EB; color: var(--el-color-success); }
+    .role-tag-more { color: var(--el-text-color-secondary); font-size: 12px; cursor: pointer; }
+    .role-tag-more:hover { color: var(--el-color-primary); }
+    .btn-text { color: var(--el-color-primary); background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; }
+    .btn-text-danger { color: var(--el-color-danger); background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; }
+    .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px; }
+    .pagination span { color: var(--el-text-color-secondary); font-size: 14px; }
+    .pagination select { height: 32px; padding: 4px 8px; border: 1px solid var(--el-border-color); border-radius: 4px; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: #FFFFFF; border-radius: 4px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+    .modal-header { padding: 16px 24px; border-bottom: 1px solid var(--el-border-color); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--el-text-color-primary); margin: 0; }
+    .modal-close { background: none; border: none; font-size: 20px; color: var(--el-text-color-secondary); cursor: pointer; }
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--el-border-color); display: flex; justify-content: flex-end; gap: 12px; }
+    /* 步骤条 */
+    .steps { display: flex; align-items: center; justify-content: center; margin-bottom: 32px; }
+    .step { display: flex; align-items: center; }
+    .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; }
+    .step-circle.done { background: var(--el-color-success); color: #fff; }
+    .step-circle.active { background: var(--el-color-primary); color: #fff; }
+    .step-circle.pending { background: #DCDFE6; color: var(--el-text-color-secondary); }
+    .step-label { margin-left: 8px; font-size: 14px; color: var(--el-text-color-regular); }
+    .step.active .step-label { color: var(--el-color-primary); font-weight: 500; }
+    .step.done .step-label { color: var(--el-color-success); }
+    .step-line { width: 80px; height: 2px; background: #DCDFE6; margin: 0 16px; }
+    .step-line.done { background: var(--el-color-success); }
+    /* 表单 */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--el-text-color-primary); }
+    .form-group label .required { color: #F56C6C; margin-left: 2px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 8px 12px; font-size: 14px; }
+    .form-row { display: flex; gap: 16px; }
+    .form-row .form-group { flex: 1; }
+    /* 选择人员 */
+    .user-select { display: flex; gap: 16px; }
+    .user-list-panel { flex: 1; border: 1px solid var(--el-border-color); border-radius: 4px; max-height: 300px; overflow-y: auto; }
+    .user-list-header { padding: 12px; border-bottom: 1px solid var(--el-border-color); background: var(--el-fill-color-lighter); display: flex; align-items: center; gap: 8px; }
+    .user-list-header input { height: 28px; flex: 1; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 0 8px; font-size: 13px; }
+    .user-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--el-border-color-lighter); cursor: pointer; }
+    .user-item:hover { background: #ECF5FF; }
+    .user-item.selected { background: #ECF5FF; }
+    .user-avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: var(--el-color-primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+    .user-item-info { flex: 1; }
+    .user-item-name { font-size: 14px; color: var(--el-text-color-primary); }
+    .user-item-dept { font-size: 12px; color: var(--el-text-color-secondary); }
+    .selected-panel { width: 280px; border: 1px solid var(--el-border-color); border-radius: 4px; }
+    .selected-header { padding: 12px; border-bottom: 1px solid var(--el-border-color); background: var(--el-fill-color-lighter); font-size: 14px; color: var(--el-text-color-primary); }
+    .selected-list { max-height: 260px; overflow-y: auto; padding: 8px; }
+    .selected-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: #ECF5FF; border-radius: 4px; margin-bottom: 8px; }
+    .selected-item-info { display: flex; align-items: center; gap: 8px; }
+    .selected-item-name { font-size: 13px; color: var(--el-text-color-primary); }
+    .selected-item-remove { color: var(--el-color-danger); cursor: pointer; font-size: 16px; }
+    /* 角色选择 */
+    .tab-switch { display: flex; border-bottom: 1px solid var(--el-border-color); margin-bottom: 16px; }
+    .tab-item { padding: 12px 24px; font-size: 14px; color: var(--el-text-color-regular); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab-item.active { color: var(--el-color-primary); border-bottom-color: var(--el-color-primary); }
+    .role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .role-card { border: 1px solid var(--el-border-color); border-radius: 4px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+    .role-card:hover { border-color: var(--el-color-primary); }
+    .role-card.selected { border-color: var(--el-color-primary); background: #ECF5FF; }
+    .role-card.disabled { opacity: 0.5; cursor: not-allowed; }
+    .role-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .role-card input[type="checkbox"] { width: 16px; height: 16px; }
+    .role-card-name { font-size: 14px; font-weight: 500; color: var(--el-text-color-primary); }
+    .role-card-desc { font-size: 12px; color: var(--el-text-color-secondary); }
+    .role-card-hr { font-size: 11px; color: #E6A23C; margin-top: 4px; }
+    .package-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .package-card { border: 1px solid var(--el-border-color); border-radius: 4px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+    .package-card:hover { border-color: var(--el-color-primary); }
+    .package-card.selected { border-color: var(--el-color-primary); background: #ECF5FF; }
+    .package-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .package-card input[type="checkbox"] { width: 16px; height: 16px; }
+    .package-card-name { font-size: 14px; font-weight: 500; color: var(--el-text-color-primary); }
+    .package-card-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .package-role-tag { padding: 2px 6px; background: #F0F9EB; color: var(--el-color-success); border-radius: 2px; font-size: 11px; }
+    /* 数据范围 */
+    .scope-options { display: flex; flex-wrap: wrap; gap: 12px; }
+    .scope-option { border: 1px solid var(--el-border-color); border-radius: 4px; padding: 12px 16px; cursor: pointer; min-width: 150px; transition: all 0.2s; }
+    .scope-option:hover { border-color: var(--el-color-primary); }
+    .scope-option.selected { border-color: var(--el-color-primary); background: #ECF5FF; }
+    .scope-option-name { font-size: 14px; color: var(--el-text-color-primary); margin-bottom: 4px; }
+    .scope-option-desc { font-size: 12px; color: var(--el-text-color-secondary); }
+    /* 详情 */
+    .detail-section { margin-bottom: 24px; }
+    .detail-section h4 { font-size: 14px; color: var(--el-text-color-primary); margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--el-border-color-lighter); }
+    .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .detail-item { display: flex; flex-direction: column; gap: 4px; }
+    .detail-item label { font-size: 12px; color: var(--el-text-color-secondary); }
+    .detail-item span { font-size: 14px; color: var(--el-text-color-primary); }
+    /* 编辑弹窗 - 角色授权卡片 */
+    .edit-modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+    .emp-info-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: #F5F7FA; border-radius: 8px; margin-bottom: 20px; }
+    .emp-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--el-color-primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: 600; }
+    .emp-info-content { flex: 1; }
+    .emp-name { font-size: 16px; font-weight: 600; color: var(--el-text-color-primary); margin: 0 0 4px 0; }
+    .emp-dept { font-size: 13px; color: var(--el-text-color-secondary); margin: 0; }
+    .emp-post { font-size: 13px; color: var(--el-text-color-secondary); margin: 2px 0 0 0; }
+    .role-authorize-section h4 { font-size: 14px; color: var(--el-text-color-primary); margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--el-border-color-lighter); }
+    .package-authorize-card { border: 1px solid var(--el-border-color); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+    .package-authorize-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--el-fill-color-lighter); border-bottom: 1px solid var(--el-border-color); }
+    .package-authorize-title { display: flex; align-items: center; gap: 8px; }
+    .package-authorize-name { font-size: 14px; font-weight: 500; color: var(--el-text-color-primary); }
+    .package-authorize-meta { font-size: 12px; color: var(--el-text-color-secondary); }
+    .package-authorize-actions { display: flex; gap: 8px; }
+    .package-authorize-body { padding: 16px; }
+    .role-authorize-item { display: flex; align-items: flex-start; padding: 12px 0; border-bottom: 1px dashed var(--el-border-color-lighter); }
+    .role-authorize-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .role-authorize-info { flex: 1; }
+    .role-authorize-name { font-size: 14px; color: var(--el-text-color-primary); margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px; }
+    .role-authorize-name .role-tag { display: inline-flex; padding: 2px 8px; background: #ECF5FF; color: var(--el-color-primary); border-radius: 4px; font-size: 12px; }
+    .role-authorize-name .role-tag-hr { background: #FDF6EC; color: #E6A23C; }
+    .role-authorize-controls { display: flex; gap: 16px; flex-wrap: wrap; }
+    .role-control-item { display: flex; align-items: center; gap: 8px; }
+    .role-control-item label { font-size: 12px; color: var(--el-text-color-secondary); white-space: nowrap; }
+    .role-control-item select, .role-control-item input { height: 28px; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 0 8px; font-size: 13px; }
+    .role-control-item input[type="date"] { width: 120px; }
+    .role-remove-btn { color: var(--el-color-danger); background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 8px; }
+    .role-remove-btn:hover { text-decoration: underline; }
+    .add-role-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px; border: 1px dashed var(--el-border-color); border-radius: 4px; color: var(--el-text-color-secondary); font-size: 13px; cursor: pointer; background: none; width: 100%; margin-top: 8px; }
+    .add-role-btn:hover { border-color: var(--el-color-primary); color: var(--el-color-primary); }
+    /* 套餐内的角色项 */
+    .package-role-item { padding: 12px 0; border-bottom: 1px dashed var(--el-border-color-lighter); }
+    .package-role-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .package-role-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .package-role-name { font-size: 14px; color: var(--el-text-color-primary); font-weight: 500; }
+    .package-role-desc { font-size: 12px; color: var(--el-text-color-secondary); }
+    .package-role-source { font-size: 11px; color: #909399; background: #F5F7FA; padding: 2px 6px; border-radius: 2px; }
+    .package-role-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--el-text-color-regular); }
+    .package-role-meta span { display: flex; align-items: center; gap: 4px; }
+    .package-role-meta label { color: var(--el-text-color-secondary); }
+    /* 卡片选中样式 */
+    .package-card.selected { border-color: var(--el-color-primary); background: #ECF5FF; }
+    .package-card:hover { border-color: var(--el-color-primary); }
+  </style>
+</head>
+<body>
+  <!-- Sider -->
+  <aside class="xxgs-sider">
+    <div class="logo" style="gap:6px;">
+      <span class="logo-text" style="display:inline-flex;align-items:center;font-size:0;">
+        <svg width="88" height="22" viewBox="0 0 88 22" xmlns="http://www.w3.org/2000/svg">
+          <text x="2" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">CO</text>
+          <g>
+            <text x="34" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">N</text>
+            <line x1="35" y1="4" x2="49" y2="18" stroke="#FF4D4F" stroke-width="2" stroke-linecap="round"/>
+          </g>
+          <text x="56" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">CH</text>
+        </svg>
+      </span>
+      <span class="logo-sub" style="margin-left:0;font-size:11px;letter-spacing:1px;">合同管理系统</span>
+    </div>
+    <nav>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>工作台</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>起草管理</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>合同预审</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M20 6L9 17l-5-5"/></svg>合同审批</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>合同履约</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>合同台账</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>相对方应用</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>合同基础</a>
+      <a class="menu-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>权限管理</a>
+      <div class="submenu">
+        <a class="submenu-item" onclick="location.href='角色管理-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>角色管理</a>
+        <a class="submenu-item" onclick="location.href='角色套餐管理-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>角色套餐</a>
+        <a class="submenu-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>权限授予</a>
+        <a class="submenu-item" onclick="location.href='授权日志-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>授权日志</a>
+        <a class="submenu-item" onclick="location.href='我的权限-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>我的权限</a>
+      </div>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>基础设施</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header class="xxgs-header">
+    <div class="flex items-center gap-2">
+      <span style="color: var(--el-text-color-secondary); font-size: 14px;">权限管理 / 权限授予</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span style="font-size: 14px; color: var(--el-text-color-secondary);">林大大(LINDADA)</span>
+    </div>
+  </header>
+
+  <!-- Tags View -->
+  <div class="xxgs-tags-view">
+    <span class="tag-item">角色管理</span>
+    <span class="tag-item">角色套餐管理</span>
+    <span class="tag-item active">权限授权</span>
+    <span class="tag-item">授权日志</span>
+  </div>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- Filter -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label>被授权人</label>
+          <input type="text" class="input-field" placeholder="请输入姓名或账号" style="width: 160px;">
+        </div>
+        <div class="filter-item">
+          <label>授权方式</label>
+          <select style="width: 120px;">
+            <option>全部</option>
+            <option>合同手动</option>
+            <option>合同自动</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>授权人</label>
+          <input type="text" class="input-field" placeholder="请输入" style="width: 140px;">
+        </div>
+        <div class="filter-item">
+          <label>授权时间</label>
+          <input type="text" class="input-field" placeholder="开始日期" style="width: 120px;"> -
+          <input type="text" class="input-field" placeholder="结束日期" style="width: 120px;">
+        </div>
+        <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>查询</button>
+        <button class="btn btn-default"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;flex-shrink:0;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>重置</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper" style="overflow-x: auto;">
+      <div style="padding: 12px 16px 8px; display: flex; align-items: center; gap: 8px;">
+        <button class="btn btn-primary" onclick="openAddModal()">+ 新增授权</button>
+      </div>
+      <table class="xxgs-table">
+        <thead>
+          <tr>
+            <th class="col-seq">序号</th>
+            <th class="col-user">被授权人</th>
+            <th class="col-post">岗位名称</th>
+            <th class="col-dept">部门</th>
+            <th class="col-roles">授权角色</th>
+            <th class="col-method">授权方式</th>
+            <th class="col-grantor">授权人</th>
+            <th class="col-date">授权时间</th>
+            <th class="col-validity">有效期</th>
+            <th class="col-action">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-seq">1</td>
+            <td class="col-user" title="张三(ZHANG SAN)">张三(ZHANG SAN)</td>
+            <td class="col-post" title="客户经理">客户经理</td>
+            <td class="col-dept" title="销售部/华东区">销售部/华东区</td>
+            <td class="col-roles">
+              <div class="role-list" title="合同查看、合同起草">
+                <span class="role-tag-list">合同查看</span>
+                <span class="role-tag-list">合同起草</span>
+              </div>
+            </td>
+            <td class="col-method">合同手动</td>
+            <td class="col-grantor" title="林大大(LINDADA)">林大大(LINDADA)</td>
+            <td class="col-date">2026-05-10</td>
+            <td class="col-validity" title="2026-01-01 至 2027-12-31">2026-01-01 至 2027-12-31</td>
+            <td class="col-action">
+              <span class="btn-text" onclick="openDetailModal()">详情</span>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger">作废</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="col-seq">2</td>
+            <td class="col-user" title="李四(LI SI)">李四(LI SI)</td>
+            <td class="col-post" title="项目经理">项目经理</td>
+            <td class="col-dept" title="销售部/华南区">销售部/华南区</td>
+            <td class="col-roles">
+              <div class="role-list" title="项目经理套餐">
+                <span class="role-tag-list package">项目经理套餐</span>
+              </div>
+            </td>
+            <td class="col-method">合同自动</td>
+            <td class="col-grantor" title="林大大(LINDADA)">林大大(LINDADA)</td>
+            <td class="col-date">2026-05-08</td>
+            <td class="col-validity" title="2026-03-01 至 2027-12-31">2026-03-01 至 2027-12-31</td>
+            <td class="col-action">
+              <span class="btn-text" onclick="openDetailModal()">详情</span>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger">作废</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="col-seq">3</td>
+            <td class="col-user" title="王五(WANG WU)">王五(WANG WU)</td>
+            <td class="col-post" title="市场专员">市场专员</td>
+            <td class="col-dept" title="市场部">市场部</td>
+            <td class="col-roles">
+              <div class="role-list" title="合同查看、归档管理">
+                <span class="role-tag-list">合同查看</span>
+                <span class="role-tag-list">归档管理</span>
+              </div>
+            </td>
+            <td class="col-method">合同手动</td>
+            <td class="col-grantor" title="张三(ZHANG SAN)">张三(ZHANG SAN)</td>
+            <td class="col-date">2026-04-15</td>
+            <td class="col-validity" title="2026-04-01 至 2026-12-31">2026-04-01 至 2026-12-31</td>
+            <td class="col-action">
+              <span class="btn-text" onclick="openDetailModal()">详情</span>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger">作废</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="col-seq">4</td>
+            <td class="col-user" title="赵六(ZHAO LIU)">赵六(ZHAO LIU)</td>
+            <td class="col-post" title="财务主管">财务主管</td>
+            <td class="col-dept" title="财务部">财务部</td>
+            <td class="col-roles">
+              <div class="role-list" title="财务审批、数据统计">
+                <span class="role-tag-list">财务审批</span>
+                <span class="role-tag-list">数据统计</span>
+              </div>
+            </td>
+            <td class="col-method">合同手动</td>
+            <td class="col-grantor" title="林大大(LINDADA)">林大大(LINDADA)</td>
+            <td class="col-date">2026-03-20</td>
+            <td class="col-validity" title="2026-01-01 至 2027-12-31">2026-01-01 至 2027-12-31</td>
+            <td class="col-action">
+              <span class="btn-text" onclick="openDetailModal()">详情</span>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger">作废</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="col-seq">5</td>
+            <td class="col-user" title="钱七(QIAN QI)">钱七(QIAN QI)</td>
+            <td class="col-post" title="法务顾问">法务顾问</td>
+            <td class="col-dept" title="法务部">法务部</td>
+            <td class="col-roles">
+              <div class="role-list" title="法务审批、条款管理">
+                <span class="role-tag-list">法务审批</span>
+                <span class="role-tag-list">条款管理</span>
+              </div>
+            </td>
+            <td class="col-method">合同自动</td>
+            <td class="col-grantor" title="张三(ZHANG SAN)">张三(ZHANG SAN)</td>
+            <td class="col-date">2026-02-28</td>
+            <td class="col-validity" title="2026-01-01 至 2027-12-31">2026-01-01 至 2027-12-31</td>
+            <td class="col-action">
+              <span class="btn-text" onclick="openDetailModal()">详情</span>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger">作废</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span>共 5 条</span>
+        <select><option>10 条/页</option></select>
+        <span class="page-num">
+          <a style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--el-text-color-secondary); text-decoration: none; background: var(--el-color-primary); color: #fff;">1</a>
+        </span>
+      </div>
+    </div>
+  </main>
+
+  <!-- 新增授权弹窗 - 三步法 -->
+  <div id="addModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="width: 800px;">
+      <div class="modal-header">
+        <h3>新增授权 - 三步法</h3>
+        <button class="modal-close" onclick="closeModal('addModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- 步骤条 -->
+        <div class="steps">
+          <div class="step active" id="step1">
+            <div class="step-circle active">1</div>
+            <span class="step-label">选择人员</span>
+          </div>
+          <div class="step-line" id="line1"></div>
+          <div class="step" id="step2">
+            <div class="step-circle pending">2</div>
+            <span class="step-label">选择角色/套餐</span>
+          </div>
+          <div class="step-line" id="line2"></div>
+          <div class="step" id="step3">
+            <div class="step-circle pending">3</div>
+            <span class="step-label">设置数据范围和有效期</span>
+          </div>
+        </div>
+
+        <!-- 步骤1：选择人员 -->
+        <div id="stepContent1">
+          <div class="user-select">
+            <div class="user-list-panel">
+              <div class="user-list-header">
+                <input type="text" placeholder="搜索姓名或账号...">
+                <button class="btn btn-primary" style="height: 28px; padding: 0 12px;">搜索</button>
+              </div>
+              <div class="user-item" onclick="selectUser(this, '张三')">
+                <input type="checkbox">
+                <div class="user-avatar-sm">张</div>
+                <div class="user-item-info">
+                  <div class="user-item-name">张三(ZHANG SAN)</div>
+                  <div class="user-item-dept">销售部 / 华东区</div>
+                </div>
+              </div>
+              <div class="user-item" onclick="selectUser(this, '李四')">
+                <input type="checkbox">
+                <div class="user-avatar-sm">李</div>
+                <div class="user-item-info">
+                  <div class="user-item-name">李四(LI SI)</div>
+                  <div class="user-item-dept">销售部 / 华南区</div>
+                </div>
+              </div>
+              <div class="user-item" onclick="selectUser(this, '王五')">
+                <input type="checkbox">
+                <div class="user-avatar-sm">王</div>
+                <div class="user-item-info">
+                  <div class="user-item-name">王五(WANG WU)</div>
+                  <div class="user-item-dept">市场部</div>
+                </div>
+              </div>
+              <div class="user-item" onclick="selectUser(this, '赵六')">
+                <input type="checkbox">
+                <div class="user-avatar-sm">赵</div>
+                <div class="user-item-info">
+                  <div class="user-item-name">赵六(ZHAO LIU)</div>
+                  <div class="user-item-dept">财务部</div>
+                </div>
+              </div>
+            </div>
+            <div class="selected-panel">
+              <div class="selected-header">已选择人员（<span id="selectedCount">0</span>人）</div>
+              <div class="selected-list" id="selectedList">
+                <p style="text-align: center; color: var(--el-text-color-secondary); font-size: 13px; padding: 20px;">请从左侧选择人员</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步骤2：选择角色/套餐 -->
+        <div id="stepContent2" style="display: none;">
+          <div class="tab-switch">
+            <div class="tab-item active" onclick="switchTab(this, 'role')">按角色选择</div>
+            <div class="tab-item" onclick="switchTab(this, 'package')">按角色套餐选择</div>
+          </div>
+          <div id="roleTab">
+            <div class="role-grid">
+              <div class="role-card" onclick="toggleRole(this)">
+                <div class="role-card-header">
+                  <input type="checkbox"> <span class="role-card-name">合同查看</span>
+                </div>
+                <div class="role-card-desc">可查看所有合同信息</div>
+              </div>
+              <div class="role-card" onclick="toggleRole(this)">
+                <div class="role-card-header">
+                  <input type="checkbox"> <span class="role-card-name">合同起草</span>
+                </div>
+                <div class="role-card-desc">可创建和编辑合同</div>
+              </div>
+              <div class="role-card" onclick="toggleRole(this)">
+                <div class="role-card-header">
+                  <input type="checkbox"> <span class="role-card-name">预审办理</span>
+                </div>
+                <div class="role-card-desc">可进行预审操作</div>
+              </div>
+              <div class="role-card" onclick="toggleRole(this)">
+                <div class="role-card-header">
+                  <input type="checkbox"> <span class="role-card-name">合同审批</span>
+                </div>
+                <div class="role-card-desc">可进行审批操作</div>
+              </div>
+              <div class="role-card disabled">
+                <div class="role-card-header">
+                  <input type="checkbox" disabled> <span class="role-card-name">财务审批</span>
+                </div>
+                <div class="role-card-desc">可进行财务审批</div>
+                <div class="role-card-hr">⚠ 合同自动角色，不可授权</div>
+              </div>
+              <div class="role-card" onclick="toggleRole(this)">
+                <div class="role-card-header">
+                  <input type="checkbox"> <span class="role-card-name">归档管理</span>
+                </div>
+                <div class="role-card-desc">可管理合同归档</div>
+              </div>
+            </div>
+          </div>
+          <div id="packageTab" style="display: none;">
+            <div class="package-grid">
+              <div class="package-card" onclick="togglePackage(this)">
+                <div class="package-card-header">
+                  <input type="checkbox"> <span class="package-card-name">项目经理套餐</span>
+                </div>
+                <div class="package-card-desc">包含3个角色</div>
+                <div class="package-card-roles">
+                  <span class="package-role-tag">合同查看</span>
+                  <span class="package-role-tag">合同起草</span>
+                  <span class="package-role-tag">预审办理</span>
+                </div>
+              </div>
+              <div class="package-card" onclick="togglePackage(this)">
+                <div class="package-card-header">
+                  <input type="checkbox"> <span class="package-card-name">部门主管套餐</span>
+                </div>
+                <div class="package-card-desc">包含3个角色</div>
+                <div class="package-card-roles">
+                  <span class="package-role-tag">合同查看</span>
+                  <span class="package-role-tag">合同审批</span>
+                  <span class="package-role-tag">数据统计</span>
+                </div>
+              </div>
+              <div class="package-card" onclick="togglePackage(this)">
+                <div class="package-card-header">
+                  <input type="checkbox"> <span class="package-card-name">行政专员套餐</span>
+                </div>
+                <div class="package-card-desc">包含2个角色</div>
+                <div class="package-card-roles">
+                  <span class="package-role-tag">合同查看</span>
+                  <span class="package-role-tag">归档管理</span>
+                </div>
+              </div>
+              <div class="package-card" onclick="togglePackage(this)">
+                <div class="package-card-header">
+                  <input type="checkbox"> <span class="package-card-name">法务顾问套餐</span>
+                </div>
+                <div class="package-card-desc">包含3个角色</div>
+                <div class="package-card-roles">
+                  <span class="package-role-tag">合同查看</span>
+                  <span class="package-role-tag">法务审批</span>
+                  <span class="package-role-tag">条款管理</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步骤3：设置数据范围和有效期 -->
+        <div id="stepContent3" style="display: none;">
+          <div class="form-group">
+            <label>数据范围 <span class="required">*</span></label>
+            <div class="scope-options">
+              <div class="scope-option selected" onclick="selectScope(this)">
+                <div class="scope-option-name">本部门</div>
+                <div class="scope-option-desc">仅可访问本人所属部门数据</div>
+              </div>
+              <div class="scope-option" onclick="selectScope(this)">
+                <div class="scope-option-name">本部门及下级</div>
+                <div class="scope-option-desc">可访问本部门及所有下级部门数据</div>
+              </div>
+              <div class="scope-option" onclick="selectScope(this)">
+                <div class="scope-option-name">全公司</div>
+                <div class="scope-option-desc">可访问全公司所有数据</div>
+              </div>
+              <div class="scope-option" onclick="selectScope(this)">
+                <div class="scope-option-name">自定义</div>
+                <div class="scope-option-desc">自定义可访问的部门范围</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>生效时间 <span class="required">*</span></label>
+              <input type="text" value="2026-05-15" placeholder="请选择生效时间">
+            </div>
+            <div class="form-group">
+              <label>到期时间</label>
+              <input type="text" value="" placeholder="默认为空，不填就是长期有效" style="border-color: #E6A23C;">
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #E6A23C;">默认为空，不填就是长期有效</p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>备注</label>
+            <textarea placeholder="请输入授权备注信息（选填）"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" id="prevBtn" onclick="prevStep()" style="display: none;">上一步</button>
+        <button class="btn btn-default" onclick="closeModal('addModal')">取消</button>
+        <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 详情弹窗 - 查看模式 -->
+  <div id="detailModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="width: 720px;">
+      <div class="modal-header">
+        <h3>授权详情</h3>
+        <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+      </div>
+      <div class="edit-modal-body">
+        <!-- 员工基本信息卡片 -->
+        <div class="emp-info-card">
+          <div class="emp-avatar">张</div>
+          <div class="emp-info-content">
+            <p class="emp-name">张三(ZHANG SAN)</p>
+            <p class="emp-dept">销售部 / 华东区</p>
+            <p class="emp-post">客户经理</p>
+          </div>
+        </div>
+
+        <!-- 角色授权信息 - 查看模式 -->
+        <div class="role-authorize-section">
+          <h4>角色授权信息</h4>
+
+          <!-- 套餐卡片1：手动授权套餐 -->
+          <div class="package-authorize-card">
+            <div class="package-authorize-header">
+              <div class="package-authorize-title">
+                <input type="checkbox" checked style="width: 16px; height: 16px;" disabled>
+                <span class="package-authorize-name">手动授权套餐</span>
+                <span class="package-authorize-meta">合同手动 · 授权人：林大大(LINDADA) · 授权时间：2026-05-10</span>
+              </div>
+            </div>
+            <div class="package-authorize-body">
+              <!-- 角色项1 -->
+              <div class="package-role-item">
+                <div class="package-role-header">
+                  <span class="package-role-name">合同查看</span>
+                  <span class="package-role-desc">可查看所有合同信息</span>
+                  <span class="package-role-source">合同手动</span>
+                </div>
+                <div class="package-role-meta">
+                  <span><label>数据范围：</label>本部门及下级</span>
+                  <span><label>生效时间：</label>2026-01-01</span>
+                  <span><label>到期时间：</label>2027-12-31</span>
+                </div>
+              </div>
+              <!-- 角色项2 -->
+              <div class="package-role-item">
+                <div class="package-role-header">
+                  <span class="package-role-name">合同起草</span>
+                  <span class="package-role-desc">可创建和编辑合同</span>
+                  <span class="package-role-source">合同手动</span>
+                </div>
+                <div class="package-role-meta">
+                  <span><label>数据范围：</label>本部门及下级</span>
+                  <span><label>生效时间：</label>2026-01-01</span>
+                  <span><label>到期时间：</label>2027-12-31</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 套餐卡片2：HR同步套餐 -->
+          <div class="package-authorize-card">
+            <div class="package-authorize-header">
+              <div class="package-authorize-title">
+                <input type="checkbox" checked style="width: 16px; height: 16px;" disabled>
+                <span class="package-authorize-name">HR同步套餐</span>
+                <span class="package-authorize-meta">HR同步 · 授权时间：2026-01-01</span>
+              </div>
+            </div>
+            <div class="package-authorize-body">
+              <!-- 角色项 -->
+              <div class="package-role-item">
+                <div class="package-role-header">
+                  <span class="package-role-name">普通用户</span>
+                  <span class="package-role-desc">基础系统角色</span>
+                  <span class="package-role-source">HR同步</span>
+                </div>
+                <div class="package-role-meta">
+                  <span><label>数据范围：</label>本部门及下级</span>
+                  <span><label>生效时间：</label>2026-01-01</span>
+                  <span><label>到期时间：</label>长期有效</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑授权弹窗 -->
+  <div id="editModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="width: 720px;">
+      <div class="modal-header">
+        <h3>编辑授权</h3>
+        <button class="modal-close" onclick="closeModal('editModal')">×</button>
+      </div>
+      <div class="edit-modal-body">
+        <!-- 员工基本信息卡片 -->
+        <div class="emp-info-card">
+          <div class="emp-avatar">张</div>
+          <div class="emp-info-content">
+            <p class="emp-name">张三(ZHANG SAN)</p>
+            <p class="emp-dept">销售部 / 华东区</p>
+            <p class="emp-post">客户经理</p>
+          </div>
+        </div>
+
+        <!-- 角色授权信息 -->
+        <div class="role-authorize-section">
+          <h4>角色授权信息</h4>
+
+          <!-- 套餐卡片1：手动授权套餐 -->
+          <div class="package-authorize-card">
+            <div class="package-authorize-header">
+              <div class="package-authorize-title">
+                <input type="checkbox" checked style="width: 16px; height: 16px;">
+                <span class="package-authorize-name">手动授权套餐</span>
+                <span class="package-authorize-meta">合同手动 · 授权人：林大大(LINDADA) · 授权时间：2026-05-10</span>
+              </div>
+              <div class="package-authorize-actions">
+                <button class="btn-text" onclick="openAddRoleToPackage(this)" style="color: var(--el-color-primary);">+ 添加角色</button>
+              </div>
+            </div>
+            <div class="package-authorize-body">
+              <!-- 角色项1 -->
+              <div class="package-role-item">
+                <div class="package-role-header">
+                  <span class="package-role-name">合同查看</span>
+                  <span class="package-role-desc">可查看所有合同信息</span>
+                  <span class="package-role-source">合同手动</span>
+                </div>
+                <div class="package-role-meta" style="margin-bottom: 12px;">
+                  <div class="role-control-item">
+                    <label>数据范围</label>
+                    <select style="width: 120px;">
+                      <option>本部门</option>
+                      <option selected>本部门及下级</option>
+                      <option>全公司</option>
+                    </select>
+                  </div>
+                  <div class="role-control-item">
+                    <label>生效时间</label>
+                    <input type="date" value="2026-01-01">
+                  </div>
+                  <div class="role-control-item">
+                    <label>到期时间</label>
+                    <input type="date" value="2027-12-31">
+                  </div>
+                </div>
+                <button class="role-remove-btn" title="移除此角色">移除</button>
+              </div>
+              <!-- 角色项2 -->
+              <div class="package-role-item">
+                <div class="package-role-header">
+                  <span class="package-role-name">合同起草</span>
+                  <span class="package-role-desc">可创建和编辑合同</span>
+                  <span class="package-role-source">合同手动</span>
+                </div>
+                <div class="package-role-meta" style="margin-bottom: 12px;">
+                  <div class="role-control-item">
+                    <label>数据范围</label>
+                    <select style="width: 120px;">
+                      <option>本部门</option>
+                      <option selected>本部门及下级</option>
+                      <option>全公司</option>
+                    </select>
+                  </div>
+                  <div class="role-control-item">
+                    <label>生效时间</label>
+                    <input type="date" value="2026-01-01">
+                  </div>
+                  <div class="role-control-item">
+                    <label>到期时间</label>
+                    <input type="date" value="2027-12-31">
+                  </div>
+                </div>
+                <button class="role-remove-btn" title="移除此角色">移除</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 套餐卡片2：HR同步套餐（不可操作） -->
+          <div class="package-authorize-card" style="opacity: 0.7;">
+            <div class="package-authorize-header">
+              <div class="package-authorize-title">
+                <input type="checkbox" checked style="width: 16px; height: 16px;" disabled>
+                <span class="package-authorize-name">HR同步套餐</span>
+                <span class="package-authorize-meta">HR同步 · 授权时间：2026-01-01</span>
+              </div>
+              <div class="package-authorize-actions">
+                <span style="font-size: 12px; color: #909399;"><i style="margin-right: 4px;">🔒</i>HR同步角色不可手动调整</span>
+              </div>
+            </div>
+            <div class="package-authorize-body">
+              <!-- 角色项：普通用户 -->
+              <div class="package-role-item">
+                <div class="package-role-header">
+                  <span class="package-role-name">普通用户</span>
+                  <span class="package-role-desc">基础系统角色</span>
+                  <span class="package-role-source">HR同步</span>
+                </div>
+                <div class="package-role-meta">
+                  <span><label>数据范围：</label>本部门及下级</span>
+                  <span><label>生效时间：</label>2026-01-01</span>
+                  <span><label>到期时间：</label>长期有效</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 套餐卡片3：系统自动套餐（不可操作） -->
+          <div class="package-authorize-card" style="opacity: 0.7;">
+            <div class="package-authorize-header">
+              <div class="package-authorize-title">
+                <input type="checkbox" checked style="width: 16px; height: 16px;" disabled>
+                <span class="package-authorize-name">系统自动套餐</span>
+                <span class="package-authorize-meta">合同自动 · 授权时间：2026-03-01</span>
+              </div>
+              <div class="package-authorize-actions">
+                <span style="font-size: 12px; color: #909399;"><i style="margin-right: 4px;">🔒</i>系统自动角色不可手动调整</span>
+              </div>
+            </div>
+            <div class="package-authorize-body">
+              <!-- 角色项：预审办理 -->
+              <div class="package-role-item">
+                <div class="package-role-header">
+                  <span class="package-role-name">预审办理</span>
+                  <span class="package-role-desc">可进行预审操作</span>
+                  <span class="package-role-source">合同自动</span>
+                </div>
+                <div class="package-role-meta">
+                  <span><label>数据范围：</label>本部门</span>
+                  <span><label>生效时间：</label>2026-03-01</span>
+                  <span><label>到期时间：</label>2026-12-31</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="closeModal('editModal')">取消</button>
+        <button class="btn btn-primary" onclick="saveEditAuth()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加角色弹窗 -->
+  <div id="addRoleModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="width: 700px;">
+      <div class="modal-header">
+        <h3>添加角色</h3>
+        <button class="modal-close" onclick="closeModal('addRoleModal')">×</button>
+      </div>
+      <div class="modal-body" style="max-height: 60vh;">
+        <!-- 选择类型切换 -->
+        <div class="tab-switch" style="margin-bottom: 20px;">
+          <div class="tab-item active" onclick="switchAddRoleTab(this, 'singleRole')">添加单个角色</div>
+          <div class="tab-item" onclick="switchAddRoleTab(this, 'package')">添加角色套餐</div>
+        </div>
+
+        <!-- 单个角色选择 -->
+        <div id="singleRolePanel">
+          <div class="form-group">
+            <label>选择角色 <span class="required">*</span></label>
+            <select id="selectRoleForAdd" style="height: 36px;">
+              <option value="">请选择角色</option>
+              <option value="contract_view">合同查看 - 可查看所有合同信息</option>
+              <option value="contract_draft">合同起草 - 可创建和编辑合同</option>
+              <option value="contract_review">合同审批 - 可进行审批操作</option>
+              <option value="archive">归档管理 - 可管理合同归档</option>
+              <option value="data_stat">数据统计 - 可查看数据报表</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 角色套餐选择 -->
+        <div id="packageRolePanel" style="display: none;">
+          <div class="package-grid">
+            <div class="package-card" onclick="toggleAddPackage(this, 'pkg_manager')">
+              <div class="package-card-header">
+                <input type="checkbox"> <span class="package-card-name">项目经理套餐</span>
+              </div>
+              <div class="package-card-desc">包含3个角色</div>
+              <div class="package-card-roles">
+                <span class="package-role-tag">合同查看</span>
+                <span class="package-role-tag">合同起草</span>
+                <span class="package-role-tag">预审办理</span>
+              </div>
+            </div>
+            <div class="package-card" onclick="toggleAddPackage(this, 'pkg_director')">
+              <div class="package-card-header">
+                <input type="checkbox"> <span class="package-card-name">部门主管套餐</span>
+              </div>
+              <div class="package-card-desc">包含3个角色</div>
+              <div class="package-card-roles">
+                <span class="package-role-tag">合同查看</span>
+                <span class="package-role-tag">合同审批</span>
+                <span class="package-role-tag">数据统计</span>
+              </div>
+            </div>
+            <div class="package-card" onclick="toggleAddPackage(this, 'pkg_admin')">
+              <div class="package-card-header">
+                <input type="checkbox"> <span class="package-card-name">行政专员套餐</span>
+              </div>
+              <div class="package-card-desc">包含2个角色</div>
+              <div class="package-card-roles">
+                <span class="package-role-tag">合同查看</span>
+                <span class="package-role-tag">归档管理</span>
+              </div>
+            </div>
+            <div class="package-card" onclick="toggleAddPackage(this, 'pkg_legal')">
+              <div class="package-card-header">
+                <input type="checkbox"> <span class="package-card-name">法务顾问套餐</span>
+              </div>
+              <div class="package-card-desc">包含3个角色</div>
+              <div class="package-card-roles">
+                <span class="package-role-tag">合同查看</span>
+                <span class="package-role-tag">法务审批</span>
+                <span class="package-role-tag">条款管理</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据权限设置 -->
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--el-border-color-lighter);">
+          <h4 style="font-size: 14px; color: var(--el-text-color-primary); margin: 0 0 16px 0;">数据权限</h4>
+          <div class="form-group">
+            <label>数据范围 <span class="required">*</span></label>
+            <select id="addRoleScope" style="height: 36px;">
+              <option value="dept">本部门 - 仅可访问本人所属部门数据</option>
+              <option value="dept_child" selected>本部门及下级 - 可访问本部门及所有下级部门数据</option>
+              <option value="company">全公司 - 可访问全公司所有数据</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin-top: 16px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>生效日期 <span class="required">*</span></label>
+              <input type="date" id="addRoleStartDate" style="height: 36px;" value="2026-05-15">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>到期时间</label>
+              <input type="date" id="addRoleEndDate" style="height: 36px;" placeholder="不填则长期有效">
+            </div>
+          </div>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #E6A23C;">不填到期时间则表示长期有效</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="closeModal('addRoleModal')">取消</button>
+        <button class="btn btn-primary" onclick="confirmAddRole()">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    let selectedUsers = [];
+
+    function openAddModal() {
+      currentStep = 1;
+      updateStepUI();
+      document.getElementById('addModal').style.display = 'flex';
+    }
+    function openDetailModal() {
+      document.getElementById('detailModal').style.display = 'flex';
+    }
+    function openEditModal() {
+      document.getElementById('editModal').style.display = 'flex';
+    }
+    function saveEditAuth() {
+      closeModal('editModal');
+      alert('授权信息已保存！');
+    }
+    function openAddRoleToPackage(btn) {
+      document.getElementById('addRoleModal').style.display = 'flex';
+    }
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+    function updateStepUI() {
+      for (let i = 1; i <= 3; i++) {
+        const step = document.getElementById('step' + i);
+        const circle = step.querySelector('.step-circle');
+        const content = document.getElementById('stepContent' + i);
+        if (i < currentStep) {
+          step.className = 'step done';
+          circle.className = 'step-circle done';
+        } else if (i === currentStep) {
+          step.className = 'step active';
+          circle.className = 'step-circle active';
+        } else {
+          step.className = 'step';
+          circle.className = 'step-circle pending';
+        }
+        content.style.display = i === currentStep ? 'block' : 'none';
+      }
+      document.getElementById('line1').className = currentStep > 1 ? 'step-line done' : 'step-line';
+      document.getElementById('line2').className = currentStep > 2 ? 'step-line done' : 'step-line';
+      document.getElementById('prevBtn').style.display = currentStep > 1 ? 'inline-flex' : 'none';
+      document.getElementById('nextBtn').textContent = currentStep === 3 ? '确认提交' : '下一步';
+    }
+    function nextStep() {
+      if (currentStep < 3) {
+        currentStep++;
+        updateStepUI();
+      } else {
+        closeModal('addModal');
+        alert('授权成功！');
+      }
+    }
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+      }
+    }
+    function selectUser(el, name) {
+      const checkbox = el.querySelector('input[type="checkbox"]');
+      checkbox.checked = !checkbox.checked;
+      el.classList.toggle('selected', checkbox.checked);
+      if (checkbox.checked) {
+        if (!selectedUsers.includes(name)) {
+          selectedUsers.push(name);
+        }
+      } else {
+        selectedUsers = selectedUsers.filter(u => u !== name);
+      }
+      updateSelectedList();
+    }
+    function updateSelectedList() {
+      const list = document.getElementById('selectedList');
+      document.getElementById('selectedCount').textContent = selectedUsers.length;
+      if (selectedUsers.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: var(--el-text-color-secondary); font-size: 13px; padding: 20px;">请从左侧选择人员</p>';
+      } else {
+        list.innerHTML = selectedUsers.map(name => `
+          <div class="selected-item">
+            <div class="selected-item-info">
+              <div class="user-avatar-sm">${name[0]}</div>
+              <span class="selected-item-name">${name}</span>
+            </div>
+            <span class="selected-item-remove" onclick="removeUser('${name}')">×</span>
+          </div>
+        `).join('');
+      }
+    }
+    function removeUser(name) {
+      selectedUsers = selectedUsers.filter(u => u !== name);
+      updateSelectedList();
+      document.querySelectorAll('.user-item').forEach(item => {
+        const itemName = item.querySelector('.user-item-name').textContent.match(/\((.+)\)/)[1];
+        if (itemName === name) {
+          item.querySelector('input[type="checkbox"]').checked = false;
+          item.classList.remove('selected');
+        }
+      });
+    }
+    function switchTab(el, tab) {
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('roleTab').style.display = tab === 'role' ? 'block' : 'none';
+      document.getElementById('packageTab').style.display = tab === 'package' ? 'block' : 'none';
+    }
+    function toggleRole(el) {
+      if (el.classList.contains('disabled')) return;
+      const checkbox = el.querySelector('input[type="checkbox"]');
+      checkbox.checked = !checkbox.checked;
+      el.classList.toggle('selected', checkbox.checked);
+    }
+    function togglePackage(el) {
+      const checkbox = el.querySelector('input[type="checkbox"]');
+      checkbox.checked = !checkbox.checked;
+      el.classList.toggle('selected', checkbox.checked);
+    }
+    function selectScope(el) {
+      document.querySelectorAll('.scope-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+    function switchAddRoleTab(el, type) {
+      document.querySelectorAll('#addRoleModal .tab-item').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      if (type === 'singleRole') {
+        document.getElementById('singleRolePanel').style.display = 'block';
+        document.getElementById('packageRolePanel').style.display = 'none';
+      } else {
+        document.getElementById('singleRolePanel').style.display = 'none';
+        document.getElementById('packageRolePanel').style.display = 'block';
+      }
+    }
+    function toggleAddPackage(el, pkgId) {
+      const checkbox = el.querySelector('input[type="checkbox"]');
+      checkbox.checked = !checkbox.checked;
+      el.classList.toggle('selected', checkbox.checked);
+    }
+    function confirmAddRole() {
+      const isSingleRole = document.querySelector('#addRoleModal .tab-item.active').textContent.includes('单个角色');
+      let selectedItem = '';
+      if (isSingleRole) {
+        const selectEl = document.getElementById('selectRoleForAdd');
+        if (!selectEl.value) {
+          alert('请选择角色');
+          return;
+        }
+        selectedItem = selectEl.options[selectEl.selectedIndex].text.split(' - ')[0];
+      } else {
+        const checkedPackages = document.querySelectorAll('#packageRolePanel input[type="checkbox"]:checked');
+        if (checkedPackages.length === 0) {
+          alert('请选择角色套餐');
+          return;
+        }
+        // 支持多选，收集选中的套餐名称
+        selectedItem = Array.from(checkedPackages).map(cb => {
+          return cb.closest('.package-card').querySelector('.package-card-name').textContent;
+        }).join('、');
+      }
+      closeModal('addRoleModal');
+      alert('已添加：' + selectedItem);
+    }
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.style.display = 'none';
+        }
+      });
+    });
+  </script>
+
+<!-- ========== PRD悬浮按钮 - xxgs-html-prd v2.0 ========== -->
+<style>
+#prdFloatBtn {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+  cursor: grab;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+#prdFloatBtn:hover {
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 6px 28px rgba(37, 99, 235, 0.5);
+}
+#prdFloatBtn:active {
+  cursor: grabbing;
+  transform: translateY(-50%) scale(1.02);
+}
+#prdFloatBtn svg {
+  width: 28px;
+  height: 28px;
+  fill: #fff;
+}
+#prdFloatBtn .tooltip-text {
+  position: absolute;
+  right: 68px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#prdFloatBtn:hover .tooltip-text {
+  opacity: 1;
+}
+#prdDocPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 520px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.12);
+  z-index: 10000;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+#prdDocPanel.open {
+  transform: translateX(0);
+}
+#prdDocPanel.minimized {
+  transform: translateX(calc(100% - 48px));
+}
+.prd-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.prd-panel-header h3 {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.prd-panel-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: background 0.15s;
+}
+.prd-panel-close:hover {
+  background: #f0f0f0;
+}
+.prd-toc {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.prd-toc::-webkit-scrollbar {
+  height: 4px;
+}
+.prd-toc::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 2px;
+}
+.prd-toc-list {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.prd-toc-item {
+  flex-shrink: 0;
+}
+.prd-toc-link {
+  display: block;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #666;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.prd-toc-link:hover {
+  background: #e6f0ff;
+  color: #2563EB;
+}
+.prd-toc-link.active {
+  background: #2563EB;
+  color: #fff;
+}
+.prd-doc-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  position: relative;
+}
+.prd-doc-content::-webkit-scrollbar {
+  width: 6px;
+}
+.prd-doc-content::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 3px;
+}
+.prd-chapter {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px dashed #f0f0f0;
+}
+.prd-chapter:last-child {
+  border-bottom: none;
+}
+.prd-chapter h2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #2563EB;
+}
+.prd-chapter h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin: 16px 0 10px;
+}
+.prd-chapter h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin: 12px 0 8px;
+  background: #f0f5ff;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+.prd-chapter p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.8;
+  margin: 0 0 10px;
+}
+.prd-chapter ul {
+  margin: 10px 0;
+  padding-left: 22px;
+}
+.prd-chapter li {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 6px;
+}
+.prd-chapter table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.prd-chapter table th,
+.prd-chapter table td {
+  padding: 10px 12px;
+  border: 1px solid #e8e8e8;
+  text-align: left;
+}
+.prd-chapter table th {
+  background: #f5f7fa;
+  font-weight: 600;
+  color: #333;
+}
+.prd-chapter table tr:nth-child(even) {
+  background: #fafafa;
+}
+.prd-panel-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+.prd-original-link {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.15s;
+}
+.prd-original-link:hover {
+  border-color: #2563EB;
+  color: #2563EB;
+}
+#prdOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#prdOverlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+</style>
+
+<div id="prdFloatBtn" title="点击查看PRD文档">
+  <span class="tooltip-text">点击查看PRD文档</span>
+  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z"/></svg>
+</div>
+
+<div id="prdOverlay"></div>
+
+<div id="prdDocPanel">
+  <div class="prd-panel-header">
+    <h3>📋 权限授权 PRD</h3>
+    <button class="prd-panel-close" id="prdMinimizeBtn" title="最小化">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="prd-panel-close" id="prdCloseBtn" title="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="prd-toc">
+    <ul class="prd-toc-list">
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch1">版本信息</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch2">修订记录</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch3">一、需求背景</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch4">二、名词解释</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch5">三、用户角色</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch6">四、功能详细需求</a></li>
+    </ul>
+  </div>
+
+  <div class="prd-doc-content" id="prdDocContent">
+    <!-- PRD内容由JavaScript动态填充 -->
+  </div>
+</div>
+
+<script>
+(function() {
+  const prdData = {
+    meta: {
+      title: '权限授权',
+      version: 'V1.0',
+      fileName: '合同管理系统-权限授权-PRD-V1.0.docx'
+    },
+    chapters: [{"id": "ch1", "title": "版本信息", "content": "<p style=\"margin:0 0 10px 0;\"><strong>合同管理系统产品需求文档(PRD)</strong></p>\n<p style=\"margin:0 0 10px 0;\"><strong>【权限授权】模块V1.0</strong></p>\n<p style=\"margin:0 0 10px 0;\">安徽海螺信息技术工程有限责任公司 版权所有</p>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文档名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">【权限授权】产品需求文档（PRD）</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文档版本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">V1.0</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">产品经理</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">白林高</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">创建日期</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">2026-05-08</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">首次上线时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">[待定]</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">优先级</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">P0（紧急）</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文档状态</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">草稿</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">原型链接</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">UI设计链接：[待补充]</td>\n</tr>\n</table>"}, {"id": "ch2", "title": "修订记录", "content": "<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">序号</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订日期</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订类型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订内容</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">备注</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">2026-05-14</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">新建</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">初始版本，基于业务流程图创建</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">白林高</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n</table>"}, {"id": "ch3", "title": "一、需求背景", "content": "<h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">1.1 业务背景</h3>\n<p style=\"margin:0 0 10px 0;\">权限授权模块是权限管理的核心功能，现有授权方式缺乏标准化流程。</p>\n<p style=\"margin:0 0 10px 0;\">现状痛点： 授权流程不统一，操作风险高；授权管理员不知道自己可以把权限授到哪个层级，存在越权风险。</p><h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">1.2 业务目标</h3>\n<p style=\"margin:0 0 10px 0;\">建立三步法标准化授权流程（选人→选角色→设数据范围和有效期），实现权限授予的规范化和风险控制，确保授权管理员只能在自己数据范围内操作。</p>\n<p style=\"margin:0 0 10px 0;\">解决方向： 建立三步法标准化授权流程（选人→选角色→设数据范围和有效期），降低操作风险；授权管理员只能在自己数据范围内操作，系统强制校验不越权。</p><h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">1.2 业务流程图</h3>\n<p style=\"margin:0 0 10px 0;\">授权管理员/超级管理员登录 → 进入权限授权列表 → 点击新增授权 → 弹出三步法向导弹窗\n\n步骤一：选择人员（仅展示授权管理员数据范围内人员）\n步骤二：选择角色/套餐（Tab切换；HR同步角色置灰不可选择）\n步骤三：设置数据范围和有效期 → 确认提交 → 立即生效 → 写入授权日志</p>"}, {"id": "ch4", "title": "二、名词解释", "content": "<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">序号</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">名词</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">三步法授权</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">步骤一选择被授权人员，步骤二选择角色或套餐，步骤三设置数据范围和有效期</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">2</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">7种模式：全部/指定部门/本部门/本部门及以下/仅本人/本公司及以下/本区域及以下/本板块及以下数据权限</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">3</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">不越权约束</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员只能在自身数据范围内为他人配置权限，服务端双重校验</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">4</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">作废授权</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">将生效中的授权变为已作废状态，操作不可逆</td>\n</tr>\n</table>"}, {"id": "ch5", "title": "三、用户角色", "content": "<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户角色</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">主要职责</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">超级管理员</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">拥有全部权限，可在任意数据范围内授权</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">在自身数据范围内为其他人员授权</td>\n</tr>\n</table>"}, {"id": "ch6", "title": "四、功能详细需求", "content": "<h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">4.1 授权列表页</h3><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">功能描述</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户场景</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员或超级管理员查看和管理人员的授权记录</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">功能说明</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">展示授权记录列表（按用户聚合），支持多维度筛选。列表展示被授权人、岗位名称、部门、授权角色、授权方式、授权人、授权时间、有效期和操作按钮组。</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">使用对象</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员、超级管理员</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">界面原型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">系统管理 &gt; 权限管理 &gt; 权限授权</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">业务规则</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1. 授权管理员：仅展示自身数据范围内的授权记录2. 超级管理员：展示全量授权记录3. HR同步角色不可手动选择（置灰只读）4. 授权状态：生效中/已过期/已作废5. 同一用户对同一角色只能有一条生效中的授权记录6. 列表按人展示，增加授权人的所属部门、岗位名称、角色数量7. 查看页面可展示个人所有角色权限8. 套餐授权的角色在一起展示，更直观</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">输入输出</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段类型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段逻辑</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入/输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本（50）</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">姓名或账号模糊搜索</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色来源</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">下拉框</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">全部/合同手动/合同自动/HR同步</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权状态</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">下拉框</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">全部/生效中/已过期/已作废</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">日期区间选择器</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">到期时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">日期区间选择器</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">显示姓名+账号</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">所属部门</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人所属组织节点</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">岗位名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人岗位名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色数量</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数字</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">该用户已授权的角色数量</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权角色</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签列表</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">展示该用户所有已授角色（含来源标签：合同手动/合同自动/HR同步）；套餐授权的角色在一起展示；点击角色标签可展开查看该角色对应的数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">格式：YYYY-MM-DD HH:MM:SS</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">执行授权操作的管理员姓名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">状态</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">生效中/已过期/已作废</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">操作说明</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">按钮名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">新增授权</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">打开三步法授权向导弹窗</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">查看详情</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">只读弹窗展示详情</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">编辑</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">可修改角色、数据范围、有效期</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">作废</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">二次确认后立即失权</td>\n</tr>\n</table><h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">4.2 新增授权（三步法向导）</h3><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">功能描述</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户场景</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员为新员工分配合同系统权限</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">功能说明</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">三步法向导弹窗：步骤一选择人员，步骤二选择角色/套餐，步骤三设置数据范围和有效期</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">使用对象</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员、超级管理员</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">业务规则</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">**步骤一：** 仅展示管理员数据范围内人员；支持多选**步骤二：** Tab切换角色/套餐；HR同步角色置灰**步骤三：** 数据范围默认与管理员一致；不填有效期则永久有效</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">输入输出</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段类型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段逻辑</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入/输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人员</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">复选框列表</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">多选；仅展示管理员数据范围内人员</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色/套餐</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">复选框列表</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">Tab切换；仅显示启用状态</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数据可见范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">下拉框</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">默认与管理员权限一致；可选7种数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">有效期</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">不填则永久有效</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">操作说明</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">按钮名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">下一步</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">校验当前步骤后进入下一步</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">上一步</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">返回上一步，保留已填内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">确认授权</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">立即生效，写入新增授权日志</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">取消</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关闭弹窗不保存</td>\n</tr>\n</table><h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">4.3 查看授权详情页</h3><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">功能描述</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户场景</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员查看指定人员的完整授权信息</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">功能说明</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">弹窗展示被授权人的所有角色权限详情，包含基本信息、已授权角色列表、数据范围、有效期、授权人等</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">使用对象</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权管理员、超级管理员</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">界面原型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权列表页点击\"查看详情\"按钮触发</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">业务规则</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1. 仅展示，无编辑功能2. 展示该用户所有已授权角色（含来源标签）3. 套餐授权的角色合并展示4. 可查看每条授权的数据范围和有效期</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">输入输出</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段类型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段逻辑</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入/输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">姓名+账号</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">所属部门</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人所属组织节点</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">岗位名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权人岗位名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">已授权角色</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签列表</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">展示该用户所有已授权角色（含来源标签）；套餐授权的角色在一起展示</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">格式：YYYY-MM-DD HH:MM:SS</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">执行授权操作的管理员姓名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">每条授权的数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">有效期</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">每条授权的有效期，不填表示永久</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权来源</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">合同手动/合同自动/HR同步</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">操作说明</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">按钮名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关闭</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关闭详情弹窗</td>\n</tr>\n</table><h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">4.4 编辑授权</h3><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">功能描述</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户场景</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">员工岗位调整后修改其角色分配和数据范围</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">功能说明</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">可修改已有授权记录的角色（增删）、数据范围和有效期</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">业务规则</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1. 可修改字段：角色（增删，不含HR同步角色）、数据范围、有效期2. 数据范围不可超出管理员自身权限边界3. 变更保存后记录修改授权日志4. 权限变更立即生效</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">操作说明</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">按钮名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">保存</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">校验通过后保存变更，记录修改授权日志</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">取消</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关闭弹窗不保存</td>\n</tr>\n</table>"}]
+  };
+
+  let prdPanelOpen = false;
+  let prdPanelMinimized = false;
+
+  function init() {
+    const btn = document.getElementById('prdFloatBtn');
+    const closeBtn = document.getElementById('prdCloseBtn');
+    const minBtn = document.getElementById('prdMinimizeBtn');
+    const overlay = document.getElementById('prdOverlay');
+
+    btn.addEventListener('click', togglePrdPanel);
+    closeBtn.addEventListener('click', closePrdPanel);
+    minBtn.addEventListener('click', minimizePrdPanel);
+    overlay.addEventListener('click', closePrdPanel);
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && prdPanelOpen) closePrdPanel();
+    });
+
+    initToc();
+    initScrollSync();
+    initDrag();
+  }
+
+  function initToc() {
+    document.querySelectorAll('.prd-toc-link').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const chapterId = this.dataset.chapter;
+        scrollToChapter(chapterId);
+        document.querySelectorAll('.prd-toc-link').forEach(function(l) { l.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+  }
+
+  function initScrollSync() {
+    const contentDiv = document.getElementById('prdDocContent');
+    if (!contentDiv) return;
+
+    const observer = new IntersectionObserver(function(entries) {
+      let visibleEntry = null;
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          visibleEntry = entry;
+        }
+      });
+
+      if (visibleEntry) {
+        const chapterId = visibleEntry.target.id;
+        document.querySelectorAll('.prd-toc-link').forEach(function(link) {
+          link.classList.toggle('active', link.dataset.chapter === chapterId);
+        });
+      }
+    }, {
+      root: contentDiv,
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0
+    });
+
+    // 观察所有章节
+    contentDiv.querySelectorAll('.prd-chapter').forEach(function(chapter) {
+      observer.observe(chapter);
+    });
+  }
+
+  function initDrag() {
+    const btn = document.getElementById('prdFloatBtn');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+
+    btn.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = btn.offsetLeft;
+      startTop = btn.offsetTop;
+      btn.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      btn.style.left = (startLeft + dx) + 'px';
+      btn.style.top = (startTop + dy) + 'px';
+      btn.style.right = 'auto';
+      btn.style.transform = 'none';
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (isDragging) {
+        isDragging = false;
+        btn.style.cursor = 'grab';
+      }
+    });
+  }
+
+  function togglePrdPanel() {
+    if (!prdPanelOpen) openPrdPanel();
+    else closePrdPanel();
+  }
+
+  function openPrdPanel() {
+    const panel = document.getElementById('prdDocPanel');
+    const overlay = document.getElementById('prdOverlay');
+    panel.classList.add('open');
+    panel.classList.remove('minimized');
+    overlay.classList.add('show');
+    prdPanelOpen = true;
+    prdPanelMinimized = false;
+    loadPrdContent();
+    initScrollSync();
+  }
+
+  function closePrdPanel() {
+    const panel = document.getElementById('prdDocPanel');
+    const overlay = document.getElementById('prdOverlay');
+    panel.classList.remove('open');
+    overlay.classList.remove('show');
+    prdPanelOpen = false;
+  }
+
+  function minimizePrdPanel() {
+    const panel = document.getElementById('prdDocPanel');
+    const overlay = document.getElementById('prdOverlay');
+    if (prdPanelMinimized) {
+      panel.classList.remove('minimized');
+      overlay.classList.add('show');
+      prdPanelMinimized = false;
+    } else {
+      panel.classList.add('minimized');
+      overlay.classList.remove('show');
+      prdPanelMinimized = true;
+    }
+  }
+
+  function loadPrdContent() {
+    const contentDiv = document.getElementById('prdDocContent');
+    let html = '';
+    prdData.chapters.forEach(function(chapter) {
+      html += '<div class="prd-chapter" id="' + chapter.id + '">';
+      html += '<h2>' + chapter.title + '</h2>';
+      html += chapter.content;
+      html += '</div>';
+    });
+    contentDiv.innerHTML = html;
+  }
+
+  function scrollToChapter(chapterId) {
+    var chapter = document.getElementById(chapterId);
+    var content = document.getElementById('prdDocContent');
+    if (!chapter || !content) {
+      return;
+    }
+    var contentTop = content.getBoundingClientRect().top;
+    var chapterTop = chapter.getBoundingClientRect().top;
+    var offset = chapterTop - contentTop;
+    content.scrollTop = content.scrollTop + offset;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的权限 - XXGS合同管理系统</title>
+  <style>
+    :root {
+      --el-color-primary: #409EFF;
+      --el-color-success: #67C23A;
+      --el-color-warning: #E6A23C;
+      --el-color-danger: #F56C6C;
+      --el-text-color-primary: #303133;
+      --el-text-color-regular: #606266;
+      --el-text-color-secondary: #909399;
+      --el-border-color: #DCDFE6;
+      --el-border-color-lighter: #EBEEF5;
+      --el-bg-color-page: #F5F7F9;
+      --el-fill-color-lighter: #FAFAFA;
+      --left-menu-bg-color: #1E4DB3;
+      --left-menu-text-color: rgba(255,255,255,0.75);
+      --left-menu-text-active-color: #FFFFFF;
+      --left-menu-bg-active-color: #3B82F6;
+      --left-menu-sub-bg-color: rgba(0,0,0,0.1);
+    }
+    body { font-family: "Noto Sans SC", sans-serif; background: var(--el-bg-color-page); margin: 0; }
+    .xxgs-sider { background: var(--left-menu-bg-color); width: 200px; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; }
+    .xxgs-sider .logo { height: 50px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .xxgs-sider .logo-text { color: #fff; font-weight: 700; font-size: 16px; }
+    .xxgs-sider .logo-sub { color: rgba(255,255,255,0.8); font-size: 12px; margin-left: 6px; }
+    .xxgs-sider nav { padding: 8px 0; }
+    .xxgs-sider .menu-item { color: var(--left-menu-text-color); height: 48px; line-height: 48px; padding: 0 20px; font-size: 14px; display: flex; align-items: center; transition: all 0.3s; cursor: pointer; text-decoration: none; }
+    .xxgs-sider .menu-item:hover { background: rgba(255,255,255,0.05); }
+    .xxgs-sider .menu-item.active { background: var(--left-menu-bg-active-color); color: var(--left-menu-text-active-color); }
+    .xxgs-sider .menu-item i { width: 24px; margin-right: 8px; font-style: normal; }
+    .xxgs-sider .submenu { background: var(--left-menu-sub-bg-color); }
+    .xxgs-sider .submenu-item { color: var(--left-menu-text-color); height: 44px; line-height: 44px; padding: 0 20px 0 52px; font-size: 13px; display: flex; align-items: center; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+    .xxgs-sider .submenu-item:hover { background: rgba(255,255,255,0.05); }
+    .xxgs-sider .submenu-item.active { background: var(--left-menu-bg-active-color); color: var(--left-menu-text-active-color); }
+    .xxgs-sider .submenu-item i { width: 24px; margin-right: 8px; font-style: normal; }
+    .xxgs-header { height: 50px; background: #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: fixed; top: 0; left: 200px; right: 0; z-index: 99; }
+    .xxgs-tags-view { height: 35px; background: #FFFFFF; border-bottom: 1px solid var(--el-border-color); display: flex; align-items: center; padding: 0 16px; gap: 8px; position: fixed; top: 50px; left: 200px; right: 0; z-index: 98; }
+    .tag-item { padding: 4px 12px; font-size: 12px; border: 1px solid var(--el-border-color); border-radius: 2px; color: var(--el-text-color-regular); cursor: pointer; white-space: nowrap; }
+    .tag-item.active { background: var(--el-color-primary); color: #FFFFFF; border-color: var(--el-color-primary); }
+    .content { margin-left: 200px; padding: 85px 24px 24px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--el-text-color-primary); }
+    .info-card { background: linear-gradient(135deg, #ECF5FF 0%, #D9ECFF 100%); border-radius: 8px; padding: 24px; margin-bottom: 16px; display: flex; align-items: center; gap: 24px; }
+    .user-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--el-color-primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 600; overflow: hidden; }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info h2 { font-size: 18px; color: var(--el-text-color-primary); margin: 0 0 4px 0; }
+    .user-info p { font-size: 14px; color: var(--el-text-color-regular); margin: 0; }
+    .stats-row { display: flex; gap: 24px; margin-left: auto; }
+    .stat-item { text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 600; color: var(--el-color-primary); }
+    .stat-label { font-size: 12px; color: var(--el-text-color-secondary); margin-top: 4px; }
+    .filter-card { background: #FFFFFF; padding: 20px; border-radius: 4px; margin-bottom: 16px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    .filter-item { display: flex; align-items: center; gap: 8px; }
+    .filter-item label { width: 80px; color: var(--el-text-color-regular); font-size: 14px; }
+    .input-field, select { height: 32px; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 0 12px; font-size: 14px; }
+    .input-field:focus, select:focus { outline: none; border-color: var(--el-color-primary); }
+    .btn { height: 32px; padding: 0 20px; border-radius: 4px; font-size: 14px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-primary { background: var(--el-color-primary); color: #FFFFFF; }
+    .btn-primary:hover { background: #66B1FF; }
+    .btn-default { background: #FFFFFF; border: 1px solid var(--el-border-color); color: var(--el-text-color-regular); }
+    .btn-default:hover { border-color: var(--el-color-primary); color: var(--el-color-primary); }
+    .table-wrapper { background: #FFFFFF; border-radius: 4px; overflow: auto; }
+    .content-area { background: #FFFFFF; border-radius: 4px; }
+    .xxgs-table { width: 100%; border-collapse: collapse; }
+    .xxgs-table th { background: var(--el-fill-color-lighter); padding: 12px 8px; text-align: left; font-weight: 500; color: var(--el-text-color-primary); border-bottom: 1px solid var(--el-border-color-lighter); font-size: 14px; }
+    .xxgs-table td { padding: 12px 8px; border-bottom: 1px solid var(--el-border-color-lighter); font-size: 14px; color: var(--el-text-color-regular); }
+    .xxgs-table tr:hover td { background: #ECF5FF; }
+    /* 操作列固定右侧 */
+    .xxgs-table th:last-child { position: sticky; right: 0; background: var(--el-fill-color-lighter); z-index: 10; }
+    .xxgs-table td:last-child { position: sticky; right: 0; background: #fff; z-index: 9; }
+    .role-tag { display: inline; font-size: 14px; color: var(--el-text-color-primary); margin: 2px 4px; }
+    .role-tag::before { content: ''; }
+    .btn-text { color: var(--el-color-primary); background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; }
+    .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px; }
+    .pagination span { color: var(--el-text-color-secondary); font-size: 14px; }
+    .pagination select { height: 32px; padding: 4px 8px; border: 1px solid var(--el-border-color); border-radius: 4px; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: #FFFFFF; border-radius: 4px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
+    .modal-header { padding: 16px 24px; border-bottom: 1px solid var(--el-border-color); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--el-text-color-primary); margin: 0; }
+    .modal-close { background: none; border: none; font-size: 20px; color: var(--el-text-color-secondary); cursor: pointer; }
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--el-border-color); display: flex; justify-content: flex-end; gap: 12px; }
+    .info-section { margin-bottom: 20px; }
+    .info-section h4 { font-size: 14px; color: var(--el-text-color-primary); margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 1px solid var(--el-border-color-lighter); }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .info-item { display: flex; flex-direction: column; gap: 4px; }
+    .info-item label { font-size: 12px; color: var(--el-text-color-secondary); }
+    .info-item span { font-size: 14px; color: var(--el-text-color-primary); }
+    .scope-tag { display: inline; font-size: 14px; color: var(--el-text-color-primary); margin: 2px 4px; }
+    /* 视图切换 */
+    .view-toggle { display: flex; gap: 4px; background: var(--el-fill-color-lighter); border-radius: 4px; padding: 2px; }
+    .view-toggle-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--el-text-color-secondary); }
+    .view-toggle-btn:hover { color: var(--el-color-primary); }
+    .view-toggle-btn.active { background: #FFFFFF; color: var(--el-color-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    /* 卡片视图 */
+    .auth-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .auth-card { background: #FFFFFF; border-radius: 8px; border: 1px solid var(--el-border-color); overflow: hidden; transition: all 0.2s; }
+    .auth-card:hover { border-color: var(--el-color-primary); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .auth-card.expired { opacity: 0.7; }
+    .auth-card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--el-border-color-lighter); }
+    .auth-card-source { display: flex; align-items: center; gap: 8px; }
+    .source-badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    .source-badge.manual { background: #E8F4FD; color: var(--el-color-primary); }
+    .source-badge.auto { background: #FDF6EC; color: var(--el-color-warning); }
+    .source-badge.hr { background: #F0F9EB; color: var(--el-color-success); }
+    .auth-card-authorizer { font-size: 12px; color: var(--el-text-color-secondary); }
+    .auth-card-body { padding: 16px; }
+    .auth-card-roles { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .auth-role-tag { padding: 4px 10px; background: #F5F7FA; color: var(--el-text-color-primary); border-radius: 4px; font-size: 13px; font-weight: 600; }
+    .auth-card-meta { display: flex; flex-direction: column; gap: 8px; }
+    .auth-meta-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .auth-meta-item label { color: var(--el-text-color-secondary); width: 56px; }
+    .auth-meta-item span { color: var(--el-text-color-primary); }
+    .auth-card-footer { padding: 12px 16px; background: var(--el-fill-color-lighter); display: flex; justify-content: flex-end; }
+    /* 状态徽章 */
+    .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .status-badge.active { background: #F0F9EB; color: #67C23A; }
+    .status-badge.expired { background: #FDF6EC; color: #E6A23C; }
+    .table-status { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    .table-status.active { background: #F0F9EB; color: #67C23A; }
+    .table-status.expired { background: #FDF6EC; color: #E6A23C; }
+  </style>
+</head>
+<body>
+  <!-- Sider -->
+  <aside class="xxgs-sider">
+    <div class="logo" style="gap:6px;">
+      <span class="logo-text" style="display:inline-flex;align-items:center;font-size:0;">
+        <svg width="88" height="22" viewBox="0 0 88 22" xmlns="http://www.w3.org/2000/svg">
+          <text x="2" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">CO</text>
+          <g>
+            <text x="34" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">N</text>
+            <line x1="35" y1="4" x2="49" y2="18" stroke="#FF4D4F" stroke-width="2" stroke-linecap="round"/>
+          </g>
+          <text x="56" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">CH</text>
+        </svg>
+      </span>
+      <span class="logo-sub" style="margin-left:0;font-size:11px;letter-spacing:1px;">合同管理系统</span>
+    </div>
+    <nav>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>工作台</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>起草管理</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>合同预审</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M20 6L9 17l-5-5"/></svg>合同审批</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>合同履约</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>合同台账</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>相对方应用</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>合同基础</a>
+      <a class="menu-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>权限管理</a>
+      <div class="submenu">
+        <a class="submenu-item" onclick="location.href='角色管理-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>角色管理</a>
+        <a class="submenu-item" onclick="location.href='角色套餐管理-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>角色套餐</a>
+        <a class="submenu-item" onclick="location.href='权限授权-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>权限授予</a>
+        <a class="submenu-item" onclick="location.href='授权日志-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>授权日志</a>
+        <a class="submenu-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>我的权限</a>
+      </div>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>基础设施</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header class="xxgs-header">
+    <div class="flex items-center gap-2">
+      <span style="color: var(--el-text-color-secondary); font-size: 14px;">我的权限</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span style="font-size: 14px; color: var(--el-text-color-secondary);">林大大(LINDADA)</span>
+    </div>
+    </header>
+
+  <!-- Tags View -->
+  <div class="xxgs-tags-view">
+    <span class="tag-item active">我的权限</span>
+  </div>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- Filter -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label>角色名称</label>
+          <input type="text" class="input-field" placeholder="请输入角色名称" style="width: 180px;">
+        </div>
+        <div class="filter-item">
+          <label>角色来源</label>
+          <select class="input-field" style="width: 140px;">
+            <option value="">全部</option>
+            <option value="contract_manual">合同手动</option>
+            <option value="contract_auto">合同自动</option>
+            <option value="hr_sync">HR同步</option>
+          </select>
+        </div>
+        <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>查询</button>
+        <button class="btn btn-default"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;flex-shrink:0;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>重置</button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area" id="contentArea">
+      <!-- View Toggle -->
+      <div style="padding: 16px 20px 0 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="view-toggle">
+          <button class="view-toggle-btn active" onclick="switchView('card')" title="卡片视图" id="cardViewBtn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="view-toggle-btn" onclick="switchView('list')" title="列表视图" id="listViewBtn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="6" width="14" height="2" rx="1"/><rect x="1" y="10" width="14" height="2" rx="1"/></svg>
+          </button>
+        </div>
+        <button class="btn btn-default" id="exportBtn" onclick="exportTable()" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0L5 3H7V8H9V3H11L8 0ZM2 12V14H14V12H2Z"/></svg>
+          导出
+        </button>
+      </div>
+
+      <!-- List View -->
+      <div id="listView" style="display: none; padding: 0 20px 20px 20px;">
+        <table class="xxgs-table">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>角色名称</th>
+            <th>角色来源</th>
+            <th>状态</th>
+            <th>数据范围</th>
+            <th>授权人</th>
+            <th>生效时间</th>
+            <th>到期时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>
+              <span class="role-tag">合同查看</span>
+              <span class="role-tag">合同起草</span>
+            </td>
+            <td>合同手动</td>
+            <td><span class="table-status active">生效中</span></td>
+            <td>
+              <span class="scope-tag">本部门及下级</span>
+            </td>
+            <td>张三(ZHANG SAN)</td>
+            <td>2026-05-15</td>
+            <td>2027-12-31</td>
+            <td><span class="btn-text" onclick="openDetailModal(false)">详情</span></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>
+              <span class="role-tag">预审办理</span>
+            </td>
+            <td>合同自动</td>
+            <td><span class="table-status active">生效中</span></td>
+            <td>
+              <span class="scope-tag">本部门</span>
+            </td>
+            <td>系统管理员(SYSTEM)</td>
+            <td>2026-05-15</td>
+            <td>2026-12-31</td>
+            <td><span class="btn-text" onclick="openDetailModal(false)">详情</span></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>
+              <span class="role-tag">普通用户</span>
+            </td>
+            <td>HR同步</td>
+            <td><span class="table-status active">生效中</span></td>
+            <td>
+              <span class="scope-tag">本部门及下级</span>
+            </td>
+            <td>系统(SYSTEM)</td>
+            <td>2026-05-15</td>
+            <td>长期有效</td>
+            <td><span class="btn-text" onclick="openDetailModal(true)">详情</span></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>
+              <span class="role-tag">合同管理员</span>
+            </td>
+            <td>合同手动</td>
+            <td><span class="table-status expired">已过期</span></td>
+            <td>
+              <span class="scope-tag">本部门</span>
+            </td>
+            <td>李四(LISI)</td>
+            <td>2026-05-15</td>
+            <td>2025-06-01</td>
+            <td><span class="btn-text" onclick="openDetailModal(false)">详情</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span>共 4 条</span>
+        <select><option>10 条/页</option></select>
+        <span class="page-num">
+          <a style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--el-text-color-secondary); text-decoration: none; background: var(--el-color-primary); color: #fff;">1</a>
+        </span>
+      </div>
+    </div>
+
+    <!-- Content Area for Cards -->
+    <div class="content-area">
+      <!-- Card View -->
+      <div class="auth-card-grid" id="cardView" style="padding: 0 20px 20px 20px;">
+      <!-- 卡片1 -->
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <div class="auth-card-source">
+            <span class="source-badge manual">合同手动</span>
+            <span class="status-badge active">生效中</span>
+          </div>
+          <span class="auth-card-authorizer">授权人：张三(ZHANG SAN)</span>
+        </div>
+        <div class="auth-card-body">
+          <div class="auth-card-roles">
+            <span class="auth-role-tag">合同查看</span>
+            <span class="auth-role-tag">合同起草</span>
+          </div>
+          <div class="auth-card-meta">
+            <div class="auth-meta-item">
+              <label>数据范围</label>
+              <span>本部门及下级</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>生效时间</label>
+              <span>2026-01-01</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>到期时间</label>
+              <span>2027-12-31</span>
+            </div>
+          </div>
+        </div>
+        <div class="auth-card-footer">
+          <button class="btn btn-text" onclick="openDetailModal(false)">查看详情</button>
+        </div>
+      </div>
+
+      <!-- 卡片2 -->
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <div class="auth-card-source">
+            <span class="source-badge auto">合同自动</span>
+            <span class="status-badge active">生效中</span>
+          </div>
+          <span class="auth-card-authorizer">授权人：系统管理员</span>
+        </div>
+        <div class="auth-card-body">
+          <div class="auth-card-roles">
+            <span class="auth-role-tag">预审办理</span>
+          </div>
+          <div class="auth-card-meta">
+            <div class="auth-meta-item">
+              <label>数据范围</label>
+              <span>本部门</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>生效时间</label>
+              <span>2026-03-01</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>到期时间</label>
+              <span>2026-12-31</span>
+            </div>
+          </div>
+        </div>
+        <div class="auth-card-footer">
+          <button class="btn btn-text" onclick="openDetailModal(false)">查看详情</button>
+        </div>
+      </div>
+
+      <!-- 卡片3 -->
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <div class="auth-card-source">
+            <span class="source-badge hr">HR同步</span>
+            <span class="status-badge active">生效中</span>
+          </div>
+          <span class="auth-card-authorizer">授权人：系统</span>
+        </div>
+        <div class="auth-card-body">
+          <div class="auth-card-roles">
+            <span class="auth-role-tag">普通用户</span>
+          </div>
+          <div class="auth-card-meta">
+            <div class="auth-meta-item">
+              <label>数据范围</label>
+              <span>本部门及下级</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>生效时间</label>
+              <span>2026-01-01</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>到期时间</label>
+              <span>长期有效</span>
+            </div>
+          </div>
+        </div>
+        <div class="auth-card-footer">
+          <button class="btn btn-text" onclick="openDetailModal(true)">查看详情</button>
+        </div>
+      </div>
+
+      <!-- 卡片4 - 已过期 -->
+      <div class="auth-card expired">
+        <div class="auth-card-header">
+          <div class="auth-card-source">
+            <span class="source-badge manual">合同手动</span>
+            <span class="status-badge expired">已过期</span>
+          </div>
+          <span class="auth-card-authorizer">授权人：李四</span>
+        </div>
+        <div class="auth-card-body">
+          <div class="auth-card-roles">
+            <span class="auth-role-tag">合同管理员</span>
+          </div>
+          <div class="auth-card-meta">
+            <div class="auth-meta-item">
+              <label>数据范围</label>
+              <span>本部门</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>生效时间</label>
+              <span>2024-06-01</span>
+            </div>
+            <div class="auth-meta-item">
+              <label>到期时间</label>
+              <span>2025-06-01</span>
+            </div>
+          </div>
+        </div>
+        <div class="auth-card-footer">
+          <button class="btn btn-text" onclick="openDetailModal(false)">查看详情</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片视图分页 -->
+    <div class="pagination" id="cardPagination" style="justify-content: center;">
+      <span style="color: var(--el-text-color-secondary);">共 4 条</span>
+    </div>
+
+  </div>
+  </main>
+
+  <!-- 权限详情弹窗 -->
+  <div id="detailModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="width: 600px;">
+      <div class="modal-header">
+        <h3>权限详情</h3>
+        <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-section">
+          <h4>基本信息</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>角色名称</label>
+              <span>合同查看、合同起草</span>
+            </div>
+            <div class="info-item">
+              <label>授权方式</label>
+              <span>合同手动</span>
+            </div>
+            <div class="info-item">
+              <label>授权人</label>
+              <span>张三(ZHANG SAN)</span>
+            </div>
+            <div class="info-item">
+              <label>授权时间</label>
+              <span>2026-01-01 10:30:00</span>
+            </div>
+            <div class="info-item">
+              <label>生效时间</label>
+              <span>2026-01-01</span>
+            </div>
+            <div class="info-item" id="expireDateItem">
+              <label>到期时间</label>
+              <span id="expireDateValue">2027-12-31</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-section">
+          <h4>数据范围</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <span class="scope-tag">✓ 销售部/华东区（本人所属部门）</span>
+            <span class="scope-tag">✓ 销售部/华南区（下级部门）</span>
+            <span class="scope-tag">✓ 销售部/华北区（下级部门）</span>
+          </div>
+          <div style="margin-top: 12px; padding: 12px; background: #F5F7F9; border-radius: 4px;">
+            <p style="margin: 0; font-size: 12px; color: var(--el-text-color-secondary);">
+              数据范围说明：您可以在上述数据范围内查看、起草合同，超出范围的数据将无法访问。
+            </p>
+          </div>
+        </div>
+        <div class="info-section">
+          <h4>菜单权限</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span style="padding: 4px 12px; background: #F5F7F9; color: var(--el-text-color-primary); border-radius: 4px; font-size: 12px; border: 1px solid var(--el-border-color-lighter);">✓ 工作台</span>
+            <span style="padding: 4px 12px; background: #F5F7F9; color: var(--el-text-color-primary); border-radius: 4px; font-size: 12px; border: 1px solid var(--el-border-color-lighter);">✓ 起草管理</span>
+            <span style="padding: 4px 12px; background: #F5F7F9; color: var(--el-text-color-primary); border-radius: 4px; font-size: 12px; border: 1px solid var(--el-border-color-lighter);">✓ 合同台账（查看）</span>
+            <span style="padding: 4px 12px; background: #F5F7F9; color: var(--el-text-color-secondary); border-radius: 4px; font-size: 12px; border: 1px solid var(--el-border-color-lighter);">✗ 合同预审</span>
+            <span style="padding: 4px 12px; background: #F5F7F9; color: var(--el-text-color-secondary); border-radius: 4px; font-size: 12px; border: 1px solid var(--el-border-color-lighter);">✗ 合同审批</span>
+            <span style="padding: 4px 12px; background: #F5F7F9; color: var(--el-text-color-secondary); border-radius: 4px; font-size: 12px; border: 1px solid var(--el-border-color-lighter);">✗ 系统管理</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentView = 'card'; // 默认卡片视图
+    function switchView(view) {
+      currentView = view;
+      const cardView = document.getElementById('cardView');
+      const listView = document.getElementById('listView');
+      const cardBtn = document.getElementById('cardViewBtn');
+      const listBtn = document.getElementById('listViewBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const cardPagination = document.getElementById('cardPagination');
+      if (view === 'card') {
+        cardView.style.display = 'grid';
+        cardPagination.style.display = 'flex';
+        listView.style.display = 'none';
+        cardBtn.classList.add('active');
+        listBtn.classList.remove('active');
+        exportBtn.style.display = 'none';
+      } else {
+        cardView.style.display = 'none';
+        cardPagination.style.display = 'none';
+        listView.style.display = 'block';
+        listBtn.classList.add('active');
+        cardBtn.classList.remove('active');
+        exportBtn.style.display = 'inline-flex';
+      }
+    }
+    function exportTable() {
+      alert('正在导出我的权限数据...');
+      // 模拟导出功能
+      const table = document.querySelector('#listView table');
+      let csv = '序号,角色名称,角色来源,数据范围,授权人,生效时间,到期时间\n';
+      table.querySelectorAll('tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        const roles = Array.from(cells[1].querySelectorAll('.role-tag')).map(t => t.textContent.trim()).join(' ');
+        csv += `${cells[0].textContent},"${roles}",${cells[2].textContent},${cells[3].textContent.trim()},${cells[4].textContent},${cells[5].textContent},${cells[6].textContent}\n`;
+      });
+      console.log('导出CSV数据：', csv);
+      alert('导出成功！');
+    }
+    function openDetailModal(isLongTerm) {
+      const expireItem = document.getElementById('expireDateItem');
+      if (isLongTerm) {
+        expireItem.style.display = 'none';
+      } else {
+        expireItem.style.display = 'flex';
+      }
+      document.getElementById('detailModal').style.display = 'flex';
+    }
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.style.display = 'none';
+        }
+      });
+    });
+  </script>
+
+<!-- ========== PRD悬浮按钮 - xxgs-html-prd v2.0 ========== -->
+<style>
+#prdFloatBtn {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+  cursor: grab;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+#prdFloatBtn:hover {
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 6px 28px rgba(37, 99, 235, 0.5);
+}
+#prdFloatBtn:active {
+  cursor: grabbing;
+  transform: translateY(-50%) scale(1.02);
+}
+#prdFloatBtn svg {
+  width: 28px;
+  height: 28px;
+  fill: #fff;
+}
+#prdFloatBtn .tooltip-text {
+  position: absolute;
+  right: 68px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#prdFloatBtn:hover .tooltip-text {
+  opacity: 1;
+}
+#prdDocPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 520px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.12);
+  z-index: 10000;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+#prdDocPanel.open {
+  transform: translateX(0);
+}
+#prdDocPanel.minimized {
+  transform: translateX(calc(100% - 48px));
+}
+.prd-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.prd-panel-header h3 {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.prd-panel-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: background 0.15s;
+}
+.prd-panel-close:hover {
+  background: #f0f0f0;
+}
+.prd-toc {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.prd-toc::-webkit-scrollbar {
+  height: 4px;
+}
+.prd-toc::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 2px;
+}
+.prd-toc-list {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.prd-toc-item {
+  flex-shrink: 0;
+}
+.prd-toc-link {
+  display: block;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #666;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.prd-toc-link:hover {
+  background: #e6f0ff;
+  color: #2563EB;
+}
+.prd-toc-link.active {
+  background: #2563EB;
+  color: #fff;
+}
+.prd-doc-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+  position: relative;
+}
+.prd-doc-content::-webkit-scrollbar {
+  width: 6px;
+}
+.prd-doc-content::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 3px;
+}
+.prd-chapter {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px dashed #f0f0f0;
+}
+.prd-chapter:last-child {
+  border-bottom: none;
+}
+.prd-chapter h2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #2563EB;
+}
+.prd-chapter h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin: 16px 0 10px;
+}
+.prd-chapter h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin: 12px 0 8px;
+  background: #f0f5ff;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+.prd-chapter p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.8;
+  margin: 0 0 10px;
+}
+.prd-chapter ul {
+  margin: 10px 0;
+  padding-left: 22px;
+}
+.prd-chapter li {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 6px;
+}
+.prd-chapter table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.prd-chapter table th,
+.prd-chapter table td {
+  padding: 10px 12px;
+  border: 1px solid #e8e8e8;
+  text-align: left;
+}
+.prd-chapter table th {
+  background: #f5f7fa;
+  font-weight: 600;
+  color: #333;
+}
+.prd-chapter table tr:nth-child(even) {
+  background: #fafafa;
+}
+.prd-panel-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+.prd-original-link {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.15s;
+}
+.prd-original-link:hover {
+  border-color: #2563EB;
+  color: #2563EB;
+}
+#prdOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+#prdOverlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+</style>
+
+<div id="prdFloatBtn" title="点击查看PRD文档">
+  <span class="tooltip-text">点击查看PRD文档</span>
+  <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z"/></svg>
+</div>
+
+<div id="prdOverlay"></div>
+
+<div id="prdDocPanel">
+  <div class="prd-panel-header">
+    <h3>📋 我的权限 PRD</h3>
+    <button class="prd-panel-close" id="prdMinimizeBtn" title="最小化">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="prd-panel-close" id="prdCloseBtn" title="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="prd-toc">
+    <ul class="prd-toc-list">
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch1">版本信息</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch2">修订记录</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch3">一、需求背景</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch4">二、名词解释</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch5">三、用户角色</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch6">四、功能详细需求</a></li>
+      <li class="prd-toc-item"><a href="#" class="prd-toc-link" data-chapter="ch7">五、关联流程</a></li>
+    </ul>
+  </div>
+
+  <div class="prd-doc-content" id="prdDocContent">
+    <!-- PRD内容由JavaScript动态填充 -->
+  </div>
+</div>
+
+<script>
+(function() {
+  const prdData = {
+    meta: {
+      title: '我的权限',
+      version: 'V1.0',
+      fileName: '合同管理系统-我的权限-PRD-V1.0.docx'
+    },
+    chapters: [{"id": "ch1", "title": "版本信息", "content": "<p style=\"margin:0 0 10px 0;\"><strong>合同管理系统产品需求文档(PRD)</strong></p>\n<p style=\"margin:0 0 10px 0;\"><strong>【我的权限】模块V1.0</strong></p>\n<p style=\"margin:0 0 10px 0;\">安徽海螺信息技术工程有限责任公司 版权所有</p>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文档名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">【我的权限】产品需求文档（PRD）</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文档版本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">V1.0</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">产品经理</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">白林高</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">创建日期</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">2026-05-08</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">首次上线时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">[待定]</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">优先级</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">P0（紧急）</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文档状态</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">草稿</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">原型链接</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">UI设计链接：[待补充]</td>\n</tr>\n</table>"}, {"id": "ch2", "title": "修订记录", "content": "<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">序号</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订日期</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订类型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订内容</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">修订人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">备注</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">2026-05-14</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">新建</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">初始版本，基于业务流程图创建</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">白林高</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n</table>"}, {"id": "ch3", "title": "一、需求背景", "content": "<h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">1.1 业务背景</h3>\n<p style=\"margin:0 0 10px 0;\">我的权限模块用于展示当前登录用户持有的所有角色权限及数据范围，帮助用户清晰了解自身在合同系统中的操作权限。</p>\n<p style=\"margin:0 0 10px 0;\">现状痛点：</p>\n<p style=\"margin:0 0 10px 0;\">• 用户不知道自己有哪些权限，不知道能操作哪些数据范围</p>\n<p style=\"margin:0 0 10px 0;\">• 需要找管理员咨询权限情况，沟通成本高</p>\n<p style=\"margin:0 0 10px 0;\">• 权限变更后用户无法及时感知</p>\n<p style=\"margin:0 0 10px 0;\">解决方向：</p>\n<p style=\"margin:0 0 10px 0;\">• 展示当前用户所有已授权角色及数据范围</p>\n<p style=\"margin:0 0 10px 0;\">• 支持查看权限生效时间和到期时间</p>\n<p style=\"margin:0 0 10px 0;\">• 权限变更时有系统通知</p><h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">1.2 业务目标</h3>\n<p style=\"margin:0 0 10px 0;\">建立用户权限自助查询机制，展示当前用户所有已授权角色及数据范围，支持查看权限生效时间和到期时间，减少权限咨询沟通成本。</p>"}, {"id": "ch4", "title": "二、名词解释", "content": "<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">序号</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">名词</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">备注</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">全部/指定部门/本部门/本部门及以下/仅本人/本公司及以下/本区域及以下/本板块及以下</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数据可见范围</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">2</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色来源</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">合同手动/合同自动/HR同步</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色授权方式</td>\n</tr>\n</table>"}, {"id": "ch5", "title": "三、用户角色", "content": "<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户角色</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">主要职责</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">所有登录用户</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">查看自身持有的角色权限及数据范围</td>\n</tr>\n</table>"}, {"id": "ch6", "title": "四、功能详细需求", "content": "<h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">4.1 我的权限列表页</h3><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">功能描述</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户场景</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">当前登录用户查看自己持有的所有角色权限及数据范围</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">功能说明</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">展示当前用户已授权的角色列表，支持生效中/已过期Tab切换，支持按角色来源筛选。列表展示角色名称、角色来源、数据范围、生效时间、到期时间和状态。</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">使用对象</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">所有登录用户</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">界面原型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">首页/我的工作台 &gt; 我的权限</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">业务规则</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1. 仅展示当前登录用户自身的权限记录2. 角色来源标签：合同手动=蓝色、合同自动=橙色、HR同步=HR同步标签3. 状态标签：生效中=绿色、已过期=灰色4. 数据范围展示具体权限范围（全部/指定部门/本部门等）5. 永久权限不显示到期时间</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">输入输出</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段类型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段逻辑</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入/输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">备注</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入框</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">支持模糊匹配</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色来源</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">下拉框</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">选项：全部、合同手动、合同自动、HR同步；默认全部</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权的角色名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色来源</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">合同手动=蓝色、合同自动=橙色、HR同步=HR同步标签</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">全部/指定部门/本部门/本部门及以下/仅本人/本公司及以下/本区域及以下/本板块及以下</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">生效时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">格式：YYYY-MM-DD HH:MM:SS</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">到期时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">永久则显示\"永久\"；格式：YYYY-MM-DD</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">状态</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">生效中=绿色；已过期=灰色</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">操作说明</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">按钮名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">搜索/重置</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">按角色来源筛选或清空条件重置列表</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">刷新</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">刷新当前权限列表</td>\n</tr>\n</table><h3 style=\"font-size:15px;font-weight:600;color:#333;margin:16px 0 10px;\">4.2 权限详情弹窗</h3><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">功能描述</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">内容</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户场景</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">用户点击某条权限记录，查看该角色的完整授权信息</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">功能说明</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">弹窗展示单条权限的完整详情，包括角色信息、授权信息、数据范围明细</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">使用对象</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">所有登录用户</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">界面原型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">我的权限列表 &gt; 点击某条记录 &gt; 弹出权限详情弹窗</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">业务规则</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">1. 仅展示，无编辑功能2. 展示授权人信息3. 数据范围展示具体配置</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">输入输出</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段类型</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">字段逻辑</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输入/输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">备注</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">被授权的角色名称</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">角色来源</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">合同手动/合同自动/HR同步</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">该授权的具体数据范围</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">生效时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">格式：YYYY-MM-DD HH:MM:SS</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">到期时间</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">永久则显示\"永久\"</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权人</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">文本</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">执行授权操作的管理员姓名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">状态</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">标签</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">生效中=绿色；已过期=灰色</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">输出</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">&nbsp;</td>\n</tr>\n</table><h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">操作说明</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">按钮名</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关闭</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关闭详情弹窗</td>\n</tr>\n</table>"}, {"id": "ch7", "title": "五、关联流程", "content": "<h4 style=\"font-size:14px;font-weight:600;color:#444;margin:12px 0 8px;background:#f0f5ff;padding:6px 10px;border-radius:4px;\">5.1 与其他模块的关系</h4>\n<table style=\"width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;border:1px solid #e8e8e8;\">\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关联模块</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">关系说明</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">权限授权</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">我的权限展示来自权限授权模块授予的角色</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">授权日志</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">权限变更记录在授权日志中</td>\n</tr>\n<tr>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">HR角色同步</td>\n<td style=\"padding:10px 12px;border:1px solid #e8e8e8;text-align:left;\">HR同步的角色也会展示在我的权限中</td>\n</tr>\n</table>"}]
+  };
+
+  let prdPanelOpen = false;
+  let prdPanelMinimized = false;
+
+  function init() {
+    const btn = document.getElementById('prdFloatBtn');
+    const closeBtn = document.getElementById('prdCloseBtn');
+    const minBtn = document.getElementById('prdMinimizeBtn');
+    const overlay = document.getElementById('prdOverlay');
+
+    btn.addEventListener('click', togglePrdPanel);
+    closeBtn.addEventListener('click', closePrdPanel);
+    minBtn.addEventListener('click', minimizePrdPanel);
+    overlay.addEventListener('click', closePrdPanel);
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && prdPanelOpen) closePrdPanel();
+    });
+
+    initToc();
+    initScrollSync();
+    initDrag();
+  }
+
+  function initToc() {
+    document.querySelectorAll('.prd-toc-link').forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const chapterId = this.dataset.chapter;
+        scrollToChapter(chapterId);
+        document.querySelectorAll('.prd-toc-link').forEach(function(l) { l.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+  }
+
+  function initScrollSync() {
+    const contentDiv = document.getElementById('prdDocContent');
+    if (!contentDiv) return;
+
+    const observer = new IntersectionObserver(function(entries) {
+      let visibleEntry = null;
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          visibleEntry = entry;
+        }
+      });
+
+      if (visibleEntry) {
+        const chapterId = visibleEntry.target.id;
+        document.querySelectorAll('.prd-toc-link').forEach(function(link) {
+          link.classList.toggle('active', link.dataset.chapter === chapterId);
+        });
+      }
+    }, {
+      root: contentDiv,
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0
+    });
+
+    // 观察所有章节
+    contentDiv.querySelectorAll('.prd-chapter').forEach(function(chapter) {
+      observer.observe(chapter);
+    });
+  }
+
+  function initDrag() {
+    const btn = document.getElementById('prdFloatBtn');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+
+    btn.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = btn.offsetLeft;
+      startTop = btn.offsetTop;
+      btn.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      btn.style.left = (startLeft + dx) + 'px';
+      btn.style.top = (startTop + dy) + 'px';
+      btn.style.right = 'auto';
+      btn.style.transform = 'none';
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (isDragging) {
+        isDragging = false;
+        btn.style.cursor = 'grab';
+      }
+    });
+  }
+
+  function togglePrdPanel() {
+    if (!prdPanelOpen) openPrdPanel();
+    else closePrdPanel();
+  }
+
+  function openPrdPanel() {
+    const panel = document.getElementById('prdDocPanel');
+    const overlay = document.getElementById('prdOverlay');
+    panel.classList.add('open');
+    panel.classList.remove('minimized');
+    overlay.classList.add('show');
+    prdPanelOpen = true;
+    prdPanelMinimized = false;
+    loadPrdContent();
+    initScrollSync();
+  }
+
+  function closePrdPanel() {
+    const panel = document.getElementById('prdDocPanel');
+    const overlay = document.getElementById('prdOverlay');
+    panel.classList.remove('open');
+    overlay.classList.remove('show');
+    prdPanelOpen = false;
+  }
+
+  function minimizePrdPanel() {
+    const panel = document.getElementById('prdDocPanel');
+    const overlay = document.getElementById('prdOverlay');
+    if (prdPanelMinimized) {
+      panel.classList.remove('minimized');
+      overlay.classList.add('show');
+      prdPanelMinimized = false;
+    } else {
+      panel.classList.add('minimized');
+      overlay.classList.remove('show');
+      prdPanelMinimized = true;
+    }
+  }
+
+  function loadPrdContent() {
+    const contentDiv = document.getElementById('prdDocContent');
+    let html = '';
+    prdData.chapters.forEach(function(chapter) {
+      html += '<div class="prd-chapter" id="' + chapter.id + '">';
+      html += '<h2>' + chapter.title + '</h2>';
+      html += chapter.content;
+      html += '</div>';
+    });
+    contentDiv.innerHTML = html;
+  }
+
+  function scrollToChapter(chapterId) {
+    var chapter = document.getElementById(chapterId);
+    var content = document.getElementById('prdDocContent');
+    if (!chapter || !content) {
+      return;
+    }
+    var contentTop = content.getBoundingClientRect().top;
+    var chapterTop = chapter.getBoundingClientRect().top;
+    var offset = chapterTop - contentTop;
+    content.scrollTop = content.scrollTop + offset;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>
