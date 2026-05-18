@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色套餐管理 - XXGS合同管理系统</title>
+  <style>
+    :root {
+      --el-color-primary: #409EFF;
+      --el-color-success: #67C23A;
+      --el-color-warning: #E6A23C;
+      --el-color-danger: #F56C6C;
+      --el-text-color-primary: #303133;
+      --el-text-color-regular: #606266;
+      --el-text-color-secondary: #909399;
+      --el-border-color: #DCDFE6;
+      --el-border-color-lighter: #EBEEF5;
+      --el-bg-color-page: #F5F7F9;
+      --el-fill-color-lighter: #FAFAFA;
+      --left-menu-bg-color: #1E4DB3;
+      --left-menu-text-color: rgba(255,255,255,0.75);
+      --left-menu-text-active-color: #FFFFFF;
+      --left-menu-bg-active-color: #3B82F6;
+      --left-menu-sub-bg-color: rgba(0,0,0,0.1);
+    }
+    body { font-family: "Noto Sans SC", sans-serif; background: var(--el-bg-color-page); margin: 0; }
+    .xxgs-sider { background: var(--left-menu-bg-color); width: 200px; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; }
+    .xxgs-sider .logo { height: 50px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .xxgs-sider .logo-text { color: #fff; font-weight: 700; font-size: 16px; }
+    .xxgs-sider .logo-sub { color: rgba(255,255,255,0.8); font-size: 12px; margin-left: 6px; }
+    .xxgs-sider nav { padding: 8px 0; }
+    .xxgs-sider .menu-item { color: var(--left-menu-text-color); height: 48px; line-height: 48px; padding: 0 20px; font-size: 14px; display: flex; align-items: center; transition: all 0.3s; cursor: pointer; text-decoration: none; }
+    .xxgs-sider .menu-item:hover { background: rgba(255,255,255,0.05); }
+    .xxgs-sider .menu-item.active { background: var(--left-menu-bg-active-color); color: var(--left-menu-text-active-color); }
+    .xxgs-sider .menu-item i { width: 24px; margin-right: 8px; font-style: normal; }
+    .xxgs-sider .submenu { background: var(--left-menu-sub-bg-color); }
+    .xxgs-sider .submenu-item { color: var(--left-menu-text-color); height: 44px; line-height: 44px; padding: 0 20px 0 52px; font-size: 13px; display: flex; align-items: center; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+    .xxgs-sider .submenu-item:hover { background: rgba(255,255,255,0.05); }
+    .xxgs-sider .submenu-item.active { background: var(--left-menu-bg-active-color); color: var(--left-menu-text-active-color); }
+    .xxgs-sider .submenu-item i { width: 24px; margin-right: 8px; font-style: normal; }
+    .xxgs-header { height: 50px; background: #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: fixed; top: 0; left: 200px; right: 0; z-index: 99; }
+    .xxgs-tags-view { height: 35px; background: #FFFFFF; border-bottom: 1px solid var(--el-border-color); display: flex; align-items: center; padding: 0 16px; gap: 8px; position: fixed; top: 50px; left: 200px; right: 0; z-index: 98; }
+    .tag-item { padding: 4px 12px; font-size: 12px; border: 1px solid var(--el-border-color); border-radius: 2px; color: var(--el-text-color-regular); cursor: pointer; white-space: nowrap; }
+    .tag-item.active { background: var(--el-color-primary); color: #FFFFFF; border-color: var(--el-color-primary); }
+    .content { margin-left: 200px; padding: 85px 24px 24px; min-height: 100vh; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--el-text-color-primary); }
+    .btn { height: 32px; padding: 0 20px; border-radius: 4px; font-size: 14px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-primary { background: var(--el-color-primary); color: #FFFFFF; }
+    .btn-primary:hover { background: #66B1FF; }
+    .btn-default { background: #FFFFFF; border: 1px solid var(--el-border-color); color: var(--el-text-color-regular); }
+    .btn-default:hover { border-color: var(--el-color-primary); color: var(--el-color-primary); }
+    .filter-card { background: #FFFFFF; padding: 20px; border-radius: 4px; margin-bottom: 16px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    .filter-item { display: flex; align-items: center; gap: 8px; }
+    .filter-item label { width: 80px; color: var(--el-text-color-regular); font-size: 14px; }
+    .input-field, select { height: 32px; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 0 12px; font-size: 14px; }
+    .input-field:focus, select:focus { outline: none; border-color: var(--el-color-primary); }
+    .table-wrapper { background: #FFFFFF; border-radius: 4px; overflow: auto; }
+    .xxgs-table { width: 100%; border-collapse: collapse; }
+    .xxgs-table th { background: var(--el-fill-color-lighter); padding: 12px 8px; text-align: left; font-weight: 500; color: var(--el-text-color-primary); border-bottom: 1px solid var(--el-border-color-lighter); font-size: 14px; }
+    .xxgs-table td { padding: 12px 8px; border-bottom: 1px solid var(--el-border-color-lighter); font-size: 14px; color: var(--el-text-color-regular); }
+    .xxgs-table tr:hover td { background: #ECF5FF; }
+    /* 操作列固定右侧 */
+    .xxgs-table th:last-child { position: sticky; right: 0; background: var(--el-fill-color-lighter); z-index: 10; }
+    .xxgs-table td:last-child { position: sticky; right: 0; background: #fff; z-index: 9; }
+    .status-tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    .status-tag .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-tag.enabled { color: var(--el-color-success); background: #F0F9EB; }
+    .status-tag.enabled .dot { background: var(--el-color-success); }
+    .status-tag.disabled { color: var(--el-text-color-secondary); background: transparent; }
+    .status-tag.disabled .dot { background: var(--el-text-color-secondary); }
+    .btn-text { color: var(--el-color-primary); background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; }
+    .btn-text-danger { color: var(--el-color-danger); background: none; border: none; cursor: pointer; font-size: 14px; padding: 0 4px; }
+    .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 16px; }
+    .pagination span { color: var(--el-text-color-secondary); font-size: 14px; }
+    .pagination select { height: 32px; padding: 4px 8px; border: 1px solid var(--el-border-color); border-radius: 4px; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: #FFFFFF; border-radius: 4px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
+    .modal-header { padding: 16px 24px; border-bottom: 1px solid var(--el-border-color); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 16px; font-weight: 600; color: var(--el-text-color-primary); margin: 0; }
+    .modal-close { background: none; border: none; font-size: 20px; color: var(--el-text-color-secondary); cursor: pointer; }
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--el-border-color); display: flex; justify-content: flex-end; gap: 12px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--el-text-color-primary); }
+    .form-group label .required { color: #F56C6C; margin-left: 2px; }
+    .form-group input, .form-group select { width: 100%; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 8px 12px; font-size: 14px; }
+    .role-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 12px; background: #ECF5FF; color: var(--el-color-primary); }
+    .role-tags-cell { display: flex; flex-wrap: wrap; gap: 4px; max-width: 280px; }
+    .role-tags-cell .role-tag { flex-shrink: 0; }
+    .role-tags-cell .more-tag { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: 12px; background: #F5F7F9; color: var(--el-text-color-secondary); border: 1px solid var(--el-border-color); cursor: pointer; }
+
+    /* 角色选择区域 - 左右分栏 */
+    .role-select-wrapper { display: flex; gap: 16px; border: 1px solid var(--el-border-color); border-radius: 4px; overflow: hidden; min-height: 320px; }
+    .role-select-left { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--el-border-color); }
+    .role-select-right { width: 220px; display: flex; flex-direction: column; background: var(--el-fill-color-lighter); }
+
+    /* 左侧 - 角色搜索 */
+    .role-search-box { padding: 12px 12px 8px; border-bottom: 1px solid var(--el-border-color-lighter); }
+    .role-search-box input { width: 100%; height: 32px; border: 1px solid var(--el-border-color); border-radius: 4px; padding: 0 28px 0 12px; font-size: 13px; box-sizing: border-box; }
+    .role-search-box input:focus { outline: none; border-color: var(--el-color-primary); }
+    .role-search-box .search-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--el-text-color-secondary); font-size: 14px; }
+    .role-search-wrap { position: relative; }
+
+    /* 左侧 - 角色列表 */
+    .role-list-scroll { flex: 1; overflow-y: auto; padding: 4px 0; }
+    .role-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; transition: background 0.15s; cursor: pointer; }
+    .role-item:hover { background: #F5F7FA; }
+    .role-item input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; margin: 0; }
+    .role-item .role-name { font-size: 13px; color: var(--el-text-color-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .role-item .role-desc { font-size: 12px; color: var(--el-text-color-secondary); flex: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+    .role-item.disabled { opacity: 0.5; cursor: not-allowed; }
+    .role-item.disabled .role-name { color: var(--el-text-color-secondary); }
+
+    /* 右侧 - 已选角色 */
+    .selected-header { padding: 10px 12px; border-bottom: 1px solid var(--el-border-color-lighter); display: flex; align-items: center; justify-content: space-between; }
+    .selected-header span { font-size: 13px; color: var(--el-text-color-primary); font-weight: 500; }
+    .selected-header .selected-count { color: var(--el-color-primary); font-weight: 600; }
+    .selected-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
+    .selected-tag { display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin: 4px 0; background: #FFFFFF; border: 1px solid var(--el-border-color-lighter); border-radius: 4px; font-size: 12px; }
+    .selected-tag .tag-name { flex: 1; color: var(--el-text-color-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .selected-tag .tag-remove { color: var(--el-text-color-secondary); cursor: pointer; font-size: 14px; line-height: 1; }
+    .selected-tag .tag-remove:hover { color: var(--el-color-danger); }
+    .selected-empty { text-align: center; padding: 40px 12px; color: var(--el-text-color-secondary); font-size: 12px; }
+    .selected-footer { padding: 8px 12px; border-top: 1px solid var(--el-border-color-lighter); text-align: right; }
+    .selected-footer .clear-all { font-size: 12px; color: var(--el-color-primary); cursor: pointer; }
+    .selected-footer .clear-all:hover { text-decoration: underline; }
+
+    /* 列表底部统计 */
+    .role-list-footer { padding: 8px 12px; border-top: 1px solid var(--el-border-color-lighter); font-size: 12px; color: var(--el-text-color-secondary); text-align: center; }
+  </style>
+</head>
+<body>
+  <!-- Sider -->
+  <aside class="xxgs-sider">
+    <div class="logo" style="gap:6px;">
+      <span class="logo-text" style="display:inline-flex;align-items:center;font-size:0;">
+        <svg width="88" height="22" viewBox="0 0 88 22" xmlns="http://www.w3.org/2000/svg">
+          <text x="2" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">CO</text>
+          <g>
+            <text x="34" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">N</text>
+            <line x1="35" y1="4" x2="49" y2="18" stroke="#FF4D4F" stroke-width="2" stroke-linecap="round"/>
+          </g>
+          <text x="56" y="18" fill="#fff" font-size="20" font-weight="700" font-family="Arial,sans-serif">CH</text>
+        </svg>
+      </span>
+      <span class="logo-sub" style="margin-left:0;font-size:11px;letter-spacing:1px;">合同管理系统</span>
+    </div>
+    <nav>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>工作台</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>起草管理</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>合同预审</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M20 6L9 17l-5-5"/></svg>合同审批</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>合同履约</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>合同台账</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>相对方应用</a>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>合同基础</a>
+      <a class="menu-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>权限管理</a>
+      <div class="submenu">
+        <a class="submenu-item" onclick="location.href='角色管理-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>角色管理</a>
+        <a class="submenu-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>角色套餐</a>
+        <a class="submenu-item" onclick="location.href='权限授权-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>权限授予</a>
+        <a class="submenu-item" onclick="location.href='授权日志-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>授权日志</a>
+        <a class="submenu-item" onclick="location.href='我的权限-原型.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:6px;height:6px;margin-right:8px;flex-shrink:0;"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>我的权限</a>
+      </div>
+      <a class="menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;margin-right:8px;flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>基础设施</a>
+    </nav>
+  </aside>
+
+  <!-- Header -->
+  <header class="xxgs-header">
+    <div class="flex items-center gap-2">
+      <span style="color: var(--el-text-color-secondary); font-size: 14px;">系统管理 / 角色套餐管理</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span style="font-size: 14px; color: var(--el-text-color-secondary);">林大大(LINDADA)</span>
+    </div>
+  </header>
+
+  <!-- Tags View -->
+  <div class="xxgs-tags-view">
+    <span class="tag-item">角色管理</span>
+    <span class="tag-item active">角色套餐管理</span>
+    <span class="tag-item">用户管理</span>
+    <span class="tag-item">菜单管理</span>
+  </div>
+
+  <!-- Content -->
+  <main class="content">
+
+    <!-- Filter -->
+    <div class="filter-card">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label>套餐名称</label>
+          <input type="text" class="input-field" placeholder="请输入套餐名称" style="width: 180px;">
+        </div>
+        <div class="filter-item">
+          <label>状态</label>
+          <select style="width: 120px;">
+            <option>全部</option>
+            <option>启用</option>
+            <option>禁用</option>
+          </select>
+        </div>
+        <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>查询</button>
+        <button class="btn btn-default"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px;flex-shrink:0;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>重置</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+      <div style="padding: 12px 16px 8px; display: flex; align-items: center; gap: 8px;">
+        <button class="btn btn-primary" onclick="openAddModal()">+ 新增套餐</button>
+      </div>
+      <table class="xxgs-table">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>套餐名称</th>
+            <th>包含角色</th>
+            <th>状态</th>
+            <th>已授权人数</th>
+            <th>创建人</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>项目经理套餐</td>
+            <td>
+              <div class="role-tags-cell">
+                <span class="role-tag">合同查看</span>
+                <span class="role-tag">合同起草</span>
+                <span class="role-tag">预审办理</span>
+                <span class="role-tag">数据统计</span>
+                <span class="role-tag">归档管理</span>
+                <span class="more-tag" title="查看全部">+5</span>
+              </div>
+            </td>
+            <td><span class="status-tag enabled"><span class="dot"></span>启用</span></td>
+            <td>15人</td>
+            <td>林大大(LINDADA)</td>
+            <td>2026-04-01 10:30:00</td>
+            <td>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger" onclick="toggleStatus(this)">禁用</span>
+              <span class="btn-text" onclick="openCopyModal()">复制</span>
+            </td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>部门主管套餐</td>
+            <td>
+              <div class="role-tags-cell">
+                <span class="role-tag">合同查看</span>
+                <span class="role-tag">合同审批</span>
+                <span class="role-tag">数据统计</span>
+              </div>
+            </td>
+            <td><span class="status-tag enabled"><span class="dot"></span>启用</span></td>
+            <td>8人</td>
+            <td>张三(ZHANG SAN)</td>
+            <td>2026-03-15 14:20:00</td>
+            <td>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger" onclick="toggleStatus(this)">禁用</span>
+              <span class="btn-text" onclick="openCopyModal()">复制</span>
+            </td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>行政专员套餐</td>
+            <td>
+              <div class="role-tags-cell">
+                <span class="role-tag">合同查看</span>
+                <span class="role-tag">归档管理</span>
+              </div>
+            </td>
+            <td><span class="status-tag enabled"><span class="dot"></span>启用</span></td>
+            <td>6人</td>
+            <td>李四(LI SI)</td>
+            <td>2026-03-10 09:15:00</td>
+            <td>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger" onclick="toggleStatus(this)">禁用</span>
+              <span class="btn-text" onclick="openCopyModal()">复制</span>
+            </td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>财务审核套餐</td>
+            <td>
+              <div class="role-tags-cell">
+                <span class="role-tag">合同查看</span>
+                <span class="role-tag">财务审批</span>
+                <span class="role-tag">数据统计</span>
+              </div>
+            </td>
+            <td><span class="status-tag disabled"><span class="dot"></span>禁用</span></td>
+            <td>0人</td>
+            <td>王五(WANG WU)</td>
+            <td>2026-02-28 11:45:00</td>
+            <td>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text" style="color: var(--el-color-success);" onclick="toggleStatus(this)">启用</span>
+              <span class="btn-text" onclick="openCopyModal()">复制</span>
+            </td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>法务顾问套餐</td>
+            <td>
+              <div class="role-tags-cell">
+                <span class="role-tag">合同查看</span>
+                <span class="role-tag">法务审批</span>
+                <span class="role-tag">条款管理</span>
+              </div>
+            </td>
+            <td><span class="status-tag enabled"><span class="dot"></span>启用</span></td>
+            <td>4人</td>
+            <td>赵六(ZHAO LIU)</td>
+            <td>2026-02-20 16:30:00</td>
+            <td>
+              <span class="btn-text" onclick="openEditModal()">编辑</span>
+              <span class="btn-text-danger" onclick="toggleStatus(this)">禁用</span>
+              <span class="btn-text" onclick="openCopyModal()">复制</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span>共 5 条</span>
+        <select><option>10 条/页</option></select>
+        <span class="page-num">
+          <a style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--el-text-color-secondary); text-decoration: none; background: var(--el-color-primary); color: #fff;">1</a>
+        </span>
+      </div>
+    </div>
+  </main>
+
+  <!-- 新增/编辑套餐弹窗 -->
+  <div id="packageModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="width: 600px;">
+      <div class="modal-header">
+        <h3 id="modalTitle">新增套餐</h3>
+        <button class="modal-close" onclick="closeModal('packageModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>套餐名称 <span class="required">*</span></label>
+          <input type="text" placeholder="请输入套餐名称">
+        </div>
+        <div class="form-group">
+          <label>选择角色 <span class="required">*</span></label>
+          <div class="role-select-wrapper">
+            <!-- 左侧：角色列表 + 搜索 -->
+            <div class="role-select-left">
+              <div class="role-search-box">
+                <div class="role-search-wrap">
+                  <input type="text" id="roleSearchInput" placeholder="搜索角色名称" oninput="filterRoles()">
+                  <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                </div>
+              </div>
+              <div class="role-list-scroll" id="roleListContainer">
+                <div class="role-item" data-name="合同查看" data-desc="可查看所有合同信息" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r1" checked onclick="event.stopPropagation()">
+                  <span class="role-name">合同查看</span>
+                  <span class="role-desc">可查看所有合同信息</span>
+                </div>
+                <div class="role-item" data-name="合同起草" data-desc="可创建和编辑合同" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r2" checked onclick="event.stopPropagation()">
+                  <span class="role-name">合同起草</span>
+                  <span class="role-desc">可创建和编辑合同</span>
+                </div>
+                <div class="role-item" data-name="预审办理" data-desc="可进行预审操作" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r3" checked onclick="event.stopPropagation()">
+                  <span class="role-name">预审办理</span>
+                  <span class="role-desc">可进行预审操作</span>
+                </div>
+                <div class="role-item" data-name="合同审批" data-desc="可进行审批操作" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r4" onclick="event.stopPropagation()">
+                  <span class="role-name">合同审批</span>
+                  <span class="role-desc">可进行审批操作</span>
+                </div>
+                <div class="role-item disabled" data-name="财务审批" data-desc="合同自动角色，不可选择">
+                  <input type="checkbox" id="r5" disabled onclick="event.stopPropagation()">
+                  <span class="role-name">财务审批</span>
+                  <span class="role-desc" style="color: #E6A23C;">合同自动，不可选择</span>
+                </div>
+                <div class="role-item" data-name="归档管理" data-desc="可管理合同归档" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r6" onclick="event.stopPropagation()">
+                  <span class="role-name">归档管理</span>
+                  <span class="role-desc">可管理合同归档</span>
+                </div>
+                <div class="role-item" data-name="数据统计" data-desc="可查看统计数据" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r7" onclick="event.stopPropagation()">
+                  <span class="role-name">数据统计</span>
+                  <span class="role-desc">可查看统计数据</span>
+                </div>
+                <div class="role-item" data-name="条款管理" data-desc="可管理合同条款" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r8" onclick="event.stopPropagation()">
+                  <span class="role-name">条款管理</span>
+                  <span class="role-desc">可管理合同条款</span>
+                </div>
+                <div class="role-item disabled" data-name="法务审批" data-desc="合同自动角色，不可选择">
+                  <input type="checkbox" id="r9" disabled onclick="event.stopPropagation()">
+                  <span class="role-name">法务审批</span>
+                  <span class="role-desc" style="color: #E6A23C;">合同自动，不可选择</span>
+                </div>
+                <div class="role-item" data-name="相对方管理" data-desc="可管理相对方信息" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r10" onclick="event.stopPropagation()">
+                  <span class="role-name">相对方管理</span>
+                  <span class="role-desc">可管理相对方信息</span>
+                </div>
+                <div class="role-item" data-name="模板管理" data-desc="可管理合同模板" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r11" onclick="event.stopPropagation()">
+                  <span class="role-name">模板管理</span>
+                  <span class="role-desc">可管理合同模板</span>
+                </div>
+                <div class="role-item" data-name="印章管理" data-desc="可进行用印申请和审批" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r12" onclick="event.stopPropagation()">
+                  <span class="role-name">印章管理</span>
+                  <span class="role-desc">可进行用印申请和审批</span>
+                </div>
+                <div class="role-item" data-name="履约跟踪" data-desc="可跟踪合同履约情况" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r13" onclick="event.stopPropagation()">
+                  <span class="role-name">履约跟踪</span>
+                  <span class="role-desc">可跟踪合同履约情况</span>
+                </div>
+                <div class="role-item" data-name="变更管理" data-desc="可发起和处理合同变更" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r14" onclick="event.stopPropagation()">
+                  <span class="role-name">变更管理</span>
+                  <span class="role-desc">可发起和处理合同变更</span>
+                </div>
+                <div class="role-item" data-name="系统管理员" data-desc="拥有系统所有权限" onclick="toggleRole(this)">
+                  <input type="checkbox" id="r15" onclick="event.stopPropagation()">
+                  <span class="role-name">系统管理员</span>
+                  <span class="role-desc">拥有系统所有权限</span>
+                </div>
+              </div>
+              <div class="role-list-footer">
+                共 <span id="totalRoleCount">15</span> 个角色
+              </div>
+            </div>
+
+            <!-- 右侧：已选角色 -->
+            <div class="role-select-right">
+              <div class="selected-header">
+                <span>已选角色 <span class="selected-count" id="selectedCount">3</span></span>
+              </div>
+              <div class="selected-list" id="selectedList">
+                <div class="selected-tag" data-role="合同查看">
+                  <span class="tag-name">合同查看</span>
+                  <span class="tag-remove" onclick="removeSelected(this, 'r1')">×</span>
+                </div>
+                <div class="selected-tag" data-role="合同起草">
+                  <span class="tag-name">合同起草</span>
+                  <span class="tag-remove" onclick="removeSelected(this, 'r2')">×</span>
+                </div>
+                <div class="selected-tag" data-role="预审办理">
+                  <span class="tag-name">预审办理</span>
+                  <span class="tag-remove" onclick="removeSelected(this, 'r3')">×</span>
+                </div>
+              </div>
+              <div class="selected-footer">
+                <span class="clear-all" onclick="clearAllSelected()">清空全部</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" onclick="closeModal('packageModal')">取消</button>
+        <button class="btn btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openAddModal() {
+      document.getElementById('modalTitle').textContent = '新增套餐';
+      document.getElementById('packageModal').style.display = 'flex';
+    }
+    function openEditModal() {
+      document.getElementById('modalTitle').textContent = '编辑套餐';
+      document.getElementById('packageModal').style.display = 'flex';
+    }
+    function openCopyModal() {
+      document.getElementById('modalTitle').textContent = '复制套餐';
+      document.getElementById('packageModal').style.display = 'flex';
+    }
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+    function toggleStatus(btn) {
+      const text = btn.textContent;
+      if (text === '禁用') {
+        btn.textContent = '启用';
+        btn.style.color = 'var(--el-color-success)';
+      } else {
+        btn.textContent = '禁用';
+        btn.style.color = 'var(--el-color-danger)';
+      }
+    }
+
+    // 角色选择相关函数
+    function toggleRole(item) {
+      if (item.classList.contains('disabled')) return;
+      const checkbox = item.querySelector('input[type="checkbox"]');
+      checkbox.checked = !checkbox.checked;
+      updateSelectedList();
+    }
+
+    function removeSelected(el, checkboxId) {
+      const checkbox = document.getElementById(checkboxId);
+      if (checkbox) checkbox.checked = false;
+      el.parentElement.remove();
+      updateSelectedCount();
+      checkEmptySelected();
+    }
+
+    function clearAllSelected() {
+      document.querySelectorAll('.role-item:not(.disabled) input[type="checkbox"]').forEach(cb => cb.checked = false);
+      updateSelectedList();
+    }
+
+    function updateSelectedList() {
+      const selectedList = document.getElementById('selectedList');
+      const checkedItems = document.querySelectorAll('.role-item:not(.disabled) input[type="checkbox"]:checked');
+      selectedList.innerHTML = '';
+      checkedItems.forEach(cb => {
+        const item = cb.closest('.role-item');
+        const name = item.dataset.name;
+        const id = cb.id;
+        const tag = document.createElement('div');
+        tag.className = 'selected-tag';
+        tag.dataset.role = name;
+        tag.innerHTML = `<span class="tag-name">${name}</span><span class="tag-remove" onclick="removeSelected(this, '${id}')">×</span>`;
+        selectedList.appendChild(tag);
+      });
+      updateSelectedCount();
+      checkEmptySelected();
+    }
+
+    function updateSelectedCount() {
+      const count = document.querySelectorAll('.role-item:not(.disabled) input[type="checkbox"]:checked').length;
+      document.getElementById('selectedCount').textContent = count;
+    }
+
+    function checkEmptySelected() {
+      const selectedList = document.getElementById('selectedList');
+      const count = document.querySelectorAll('.role-item:not(.disabled) input[type="checkbox"]:checked').length;
+      if (count === 0) {
+        selectedList.innerHTML = '<div class="selected-empty">暂无已选角色</div>';
+      }
+    }
+
+    function filterRoles() {
+      const keyword = document.getElementById('roleSearchInput').value.toLowerCase().trim();
+      const items = document.querySelectorAll('.role-item');
+      let visibleCount = 0;
+      items.forEach(item => {
+        const name = item.dataset.name.toLowerCase();
+        const desc = item.dataset.desc.toLowerCase();
+        if (!keyword || name.includes(keyword) || desc.includes(keyword)) {
+          item.style.display = 'flex';
+          visibleCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      document.getElementById('totalRoleCount').textContent = visibleCount;
+    }
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
